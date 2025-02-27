@@ -1,86 +1,41 @@
-import React, { useEffect, useRef } from "react";
-
 const Background = () => {
-  const canvasRef = useRef(null);
+  return (
+    <div className="fixed inset-0 overflow-hidden z-0">
+      {/* Base Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/80 to-black"></div>
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+      {/* Animated Geometric Grid */}
+      <div className="absolute inset-0 opacity-15">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:20px_20px] animate-pulse"></div>
+      </div>
 
-    // Set canvas size
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+      {/* Floating Particles Animation */}
+      <div className="absolute inset-0 animate-fade-in">
+        {[...Array(25)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-gradient-to-r from-gray-600/20 to-gray-400/20 shadow-xl"
+            style={{
+              width: Math.random() * 12 + 6 + "px",
+              height: Math.random() * 12 + 6 + "px",
+              top: Math.random() * 100 + "%",
+              left: Math.random() * 100 + "%",
+              animation: `float ${
+                10 + Math.random() * 10
+              }s infinite linear alternate`,
+            }}
+          />
+        ))}
+      </div>
 
-    let step = 0;
+      {/* Subtle Radial Gradient Center */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-gray-900/80 to-black"></div>
 
-    // Star Class
-    class Star {
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2; // Smaller stars
-        this.opacity = Math.random();
-        this.twinkleSpeed = Math.random() * 0.01 + 0.003;
-      }
-
-      update() {
-        this.opacity += this.twinkleSpeed * (Math.random() > 0.5 ? 1 : -1);
-        this.opacity = Math.min(1, Math.max(0.3, this.opacity));
-      }
-
-      draw() {
-        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Fewer stars (Minimal look)
-    const stars = Array.from({ length: 50 }, () => new Star());
-
-    function animate() {
-      // Soft, very low-intensity glow
-      const gradient = ctx.createRadialGradient(
-        canvas.width * 0.98,
-        canvas.height * 0.98,
-        5, // Smaller bright core
-        canvas.width * 0.75,
-        canvas.height * 0.75,
-        Math.max(canvas.width, canvas.height) * 0.8 // Light is dimly everywhere
-      );
-
-      gradient.addColorStop(0, "rgba(255, 130, 40, 0.15)");
-      gradient.addColorStop(0.3, "rgba(160, 80, 30, 0.1)");
-      gradient.addColorStop(0.7, "rgba(50, 50, 80, 0.05)");
-      gradient.addColorStop(1, "rgba(0, 0, 0, 0.02)");
-
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Twinkling Stars
-      stars.forEach(star => {
-        star.update();
-        star.draw();
-      });
-
-      step += 0.002;
-      requestAnimationFrame(animate);
-    }
-
-    // Handle window resize
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-
-    window.addEventListener("resize", handleResize);
-    animate();
-
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full z-0" />;
+      {/* Animated Blobs */}
+      <div className="absolute -top-[250px] -left-[450px] w-[750px] h-[750px] bg-gradient-to-r from-gray-700/30 to-gray-600/30 rounded-full opacity-50 mix-blend-soft-light animate-blob animate-delay-2000 filter blur-3xl"></div>
+      <div className="absolute -top-[150px] -right-[350px] w-[650px] h-[650px] bg-gradient-to-r from-gray-800/30 to-gray-700/30 rounded-full opacity-50 mix-blend-soft-light animate-blob animate-delay-4000 filter blur-3xl"></div>
+    </div>
+  );
 };
 
 export default Background;
