@@ -13,28 +13,3 @@
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
 }
-/* styles.css or within a <style> tag */
-:root {
-  --background-color: #ffffff;
-  --text-color: #000000;
-  --secondary-bg: #f0f0f0;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background-color: #1a1a1a; /* Matches the dark cosmic ocean vibe */
-    --text-color: #e0e0e0;
-    --secondary-bg: #2c3e50;
-  }
-}
-
-/* Apply variables to your site */
-body {
-  background-color: var(--background-color);
-  color: var(--text-color);
-}
-
-/* Ensure the Background component container blends with dark mode */
-.background-container {
-  background-color: transparent; /* Let the component's gradient shine through */
-}
