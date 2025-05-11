@@ -13,12 +13,13 @@ const App = () => {
           <div className="flex justify-center pt-8">
             <div className="relative group">
               <img
+                loading="lazy"
                 src="https://upload.wikimedia.org/wikipedia/en/thumb/8/87/RUET_logo.svg/1200px-RUET_logo.svg.png"
                 alt="RUET logo"
                 className="w-36 h-auto transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]"
               />
               {/* Glowing Ring Effect */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
           </div>
 
@@ -31,13 +32,15 @@ const App = () => {
               Discover the students of Electrical and Computer Engineering
             </p>
             {/* Underline Accent */}
-            <div className="w-32 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto mt-4 opacity-80"></div>
+            <div className="w-32 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto mt-4 opacity-80" />
           </div>
 
           {/* Profile Cards */}
           <div className="flex flex-wrap justify-center gap-5 px-4 pb-8">
             {data && data.length > 0 ? (
-              data.map((elem, index) => <Card key={index} currElem={elem} />)
+              data.map((elem, index) => (
+                <Card key={elem.id || index} currElem={elem} />
+              ))
             ) : (
               <p className="text-center text-red-400 text-lg font-semibold">
                 No data available!
