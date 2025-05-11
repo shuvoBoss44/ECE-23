@@ -1,24 +1,11 @@
-import { FaFacebook, FaPhone, FaLinkedin, FaWhatsapp } from "react-icons/fa";
+import { FaFacebook, FaPhone, FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { useState } from "react";
 
-// Utility function to transform Google Drive URLs
-const getGoogleDriveImageUrl = url => {
-  if (url && url.includes("drive.google.com")) {
-    const fileIdMatch = url.match(/id=([^&]+)/);
-    return fileIdMatch
-      ? `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`
-      : url;
-  }
-  return url;
-};
-
 const Card = ({ currElem }) => {
-  const { facebook, phone, linkedin, whatsapp } = currElem.socialMedia;
-  const [imageSrc, setImageSrc] = useState(
-    getGoogleDriveImageUrl(currElem.image)
-  );
+  const { facebook, phone, instagram, whatsapp } = currElem.socialMedia;
+  const [imageSrc, setImageSrc] = useState(`./${currElem.image}`);
 
-  // Fallback image when the original fails to load
+  // Fallback to void image if the original image doesn't exist
   const handleImageError = () => {
     setImageSrc(
       "https://zeru.com/blog/wp-content/uploads/How-Do-You-Have-No-Profile-Picture-on-Facebook_25900"
@@ -26,7 +13,7 @@ const Card = ({ currElem }) => {
   };
 
   return (
-    <div className="w-80 sm:w-90 md:w-80 p-6 transition-all duration-300 ease-in-out hover:-translate-y-2 bg-gradient-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-xl rounded-2xl shadow-2xl hover:shadow-3xl relative overflow-hidden group">
+    <div className="w-[90vw] max-w-md sm:w-96 md:w-80 p-6 transition-all duration-300 ease-in-out hover:-translate-y-2 bg-gradient-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-xl rounded-2xl shadow-2xl hover:shadow-3xl relative overflow-hidden group">
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 animate-background-flow rounded-2xl" />
 
@@ -37,7 +24,7 @@ const Card = ({ currElem }) => {
       <div className="relative z-10 flex justify-center mb-6">
         <div className="relative inline-block before:absolute before:-inset-1.5 before:bg-gradient-to-r before:from-blue-400 before:via-purple-400 before:to-pink-400 before:rounded-full before:animate-rotate before:opacity-50">
           <img
-            className="w-56 h-56 object-cover rounded-full border-4 border-white/20 shadow-2xl hover:scale-105 transition-transform duration-300 relative z-10"
+            className="w-64 h-64 sm:w-56 sm:h-56 object-cover rounded-full border-4 border-white/20 shadow-2xl hover:scale-105 transition-transform duration-300 relative z-10"
             src={imageSrc}
             alt={currElem.name}
             onError={handleImageError}
@@ -49,10 +36,10 @@ const Card = ({ currElem }) => {
       <div className="relative z-10 text-left space-y-4">
         {/* Name and Roll Number */}
         <div className="text-center">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent drop-shadow-md">
+          <h2 className="text-3xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent drop-shadow-md">
             {currElem.name}
           </h2>
-          <p className="text-xl font-semibold text-blue-300 mt-1">
+          <p className="text-2xl sm:text-xl font-semibold text-blue-300 mt-1">
             {currElem.roll}
           </p>
         </div>
@@ -98,14 +85,14 @@ const Card = ({ currElem }) => {
               <FaPhone className="size-6 text-green-400" />
             </a>
           )}
-          {linkedin && (
+          {instagram && (
             <a
-              href={linkedin}
+              href={instagram}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-full bg-white/5 hover:bg-blue-600/20 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-blue-600/30"
+              className="p-2 rounded-full bg-white/5 hover:bg-pink-500/20 transition-all duration-300 hover:scale-110 shadow-sm hover:shadow-pink-500/30"
             >
-              <FaLinkedin className="size-6 text-blue-300" />
+              <FaInstagram className="size-6 text-pink-400" />
             </a>
           )}
           {whatsapp && (
