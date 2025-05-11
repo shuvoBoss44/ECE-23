@@ -28,6 +28,7 @@ const Card = ({ currElem }) => {
             src={imageSrc}
             alt={currElem.name}
             onError={handleImageError}
+            loading="lazy"
           />
         </div>
       </div>
