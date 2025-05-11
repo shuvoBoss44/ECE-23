@@ -6,27 +6,32 @@ const Background = ({ children }) => {
   useEffect(() => {
     const generateStars = () => {
       const newStars = [];
-      for (let i = 0; i < 150; i++) {
-        const star = {
+      // Reduce the number of stars and make their creation more efficient
+      for (let i = 0; i < 80; i++) {
+        newStars.push({
           id: i,
-          size: Math.random() * 3,
+          size: Math.random() * 2 + 1, // Smaller stars on average
           left: Math.random() * 100,
           top: Math.random() * 100,
-          animationDuration: Math.random() * 3 + 2,
-        };
-        newStars.push(star);
+          animationDuration: Math.random() * 4 + 2,
+        });
       }
       setStars(newStars);
     };
 
     generateStars();
-    window.addEventListener("resize", generateStars);
-    return () => window.removeEventListener("resize", generateStars);
+    // Throttle resize events
+    const resizeHandler = () => {
+      clearTimeout(window.resizeTimer);
+      window.resizeTimer = setTimeout(generateStars, 200);
+    };
+    window.addEventListener("resize", resizeHandler);
+    return () => window.removeEventListener("resize", resizeHandler);
   }, []);
 
   return (
     <div className="fixed inset-0 z-[-1] bg-black overflow-hidden">
-      {/* Stars */}
+      {/* Optimized stars with hardware acceleration */}
       {stars.map(star => (
         <div
           key={star.id}
@@ -37,42 +42,41 @@ const Background = ({ children }) => {
             left: `${star.left}%`,
             top: `${star.top}%`,
             animationDuration: `${star.animationDuration}s`,
+            transform: "translateZ(0)", // Promote to own layer
+            willChange: "opacity", // Hint browser for optimization
           }}
         />
       ))}
 
-      {/* Animated particles */}
-      <div className="absolute inset-0 animate-pulse">
-        <div className="absolute w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-blue-900/20 to-transparent" />
+      {/* Simplified particle effect */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute w-full h-full bg-gradient-to-b from-transparent via-blue-400/10 to-transparent" />
       </div>
 
-      {/* Shooting stars */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white animate-shoot"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-            }}
-          />
-        ))}
-      </div>
+      {/* Reduced shooting stars with better animation */}
+      {[...Array(2)].map((_, i) => (
+        <div
+          key={`shooting-${i}`}
+          className="absolute w-1 h-1 bg-gradient-to-r from-blue-400 to-transparent animate-shoot"
+          style={{
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 10}s`,
+            transform: "translateZ(0)",
+          }}
+        />
+      ))}
 
       {children}
 
       <style jsx global>{`
         @keyframes twinkle {
-          0% {
-            opacity: 0.2;
+          0%,
+          100% {
+            opacity: 0.3;
           }
           50% {
-            opacity: 1;
-          }
-          100% {
-            opacity: 0.2;
+            opacity: 0.8;
           }
         }
         @keyframes shoot {
@@ -81,15 +85,16 @@ const Background = ({ children }) => {
             opacity: 1;
           }
           100% {
-            transform: translateX(-100vw) translateY(100vh);
+            transform: translateX(-100vmax) translateY(50vmin);
             opacity: 0;
           }
         }
         .animate-twinkle {
-          animation: twinkle infinite linear;
+          animation: twinkle infinite ease-in-out;
         }
         .animate-shoot {
-          animation: shoot 2s infinite linear;
+          animation: shoot 1.5s infinite linear;
+          box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
         }
       `}</style>
     </div>
