@@ -225,6 +225,21 @@
     "image": "17.jpg"
   },
   {
+    "name": "Zawad Bin Zakaria",
+    "roll": "2310018",
+    "college": "Police Lines School And College, Rangpur",
+    "school": "Police Lines School And College, Rangpur",
+    "district": "Rangpur",
+    "quote": "The grind doesn’t promise ease—it promises growth.",
+    "socialMedia": {
+      "facebook": "https://www.facebook.com/share/18FrqApVza/",
+      "phone": "+8801770840990",
+      "instagram": "",
+      "whatsapp": "https://wa.me/+8801770840990"
+    },
+    "image": "18.jpg"
+  },
+  {
     "name": "MOHON MOSTAFA",
     "roll": "2310019",
     "college": "NOTRE DAME COLLEGE, DHAKA",
@@ -645,6 +660,21 @@
     "image": "48.jpg"
   },
   {
+    "name": "Naqeeb Ibne Huda",
+    "roll": "2310049",
+    "college": "Government Science College, Dhaka",
+    "school": "T.N.A.N.F.M, Bogura",
+    "district": "Joypurhat",
+    "quote": "Life is either a daring adventure or nothing at all, and in the end, we only regret the chances we didn’t take.",
+    "socialMedia": {
+      "facebook": "https://www.facebook.com/share/16aRd1fMXA/",
+      "phone": "+8801746434651",
+      "instagram": "",
+      "whatsapp": ""
+    },
+    "image": "49.jpg"
+  },
+  {
     "name": "Salauddin Sikder",
     "roll": "2310050",
     "college": "Dhaka Commerce College",
@@ -819,7 +849,7 @@
     "socialMedia": {
       "facebook": "https://www.facebook.com/share/16bR3apvDV/?mibextid=qi2Omg",
       "phone": "+8801577144943",
-      "instagram": "",
+      "instagram": "https://www.instagram.com/_shuvo_chakma/",
       "whatsapp": "https://wa.me/+8801625490792"
     },
     "image": "61.jpg"
