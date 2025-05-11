@@ -5,35 +5,48 @@ import data from "./api/data.json";
 const App = () => {
   return (
     <div className="relative min-h-screen">
-      {/* Background with lower z-index */}
-      <Background />
+      {/* Fixed fullscreen background */}
+      <Background fullscreen={true} />
 
-      {/* Content container with higher z-index */}
-      <div className="relative z-10">
-        <div className="flex justify-center pt-6">
-          <img
-            src="https://upload.wikimedia.org/wikipedia/en/thumb/8/87/RUET_logo.svg/1200px-RUET_logo.svg.png"
-            alt="RUET logo"
-            className="w-32 h-auto drop-shadow-logo"
-          />
-        </div>
+      {/* Content container with Flexbox to push footer to bottom */}
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <main className="flex-1">
+          {/* Logo */}
+          <div className="flex justify-center pt-6">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/en/thumb/8/87/RUET_logo.svg/1200px-RUET_logo.svg.png"
+              alt="RUET logo"
+              className="w-32 h-auto drop-shadow-logo"
+            />
+          </div>
 
-        {/* Heading */}
-        <h1 className="text-center text-3xl font-bold text-white my-6 neon-text">
-          ECE-23 DETAILS
-        </h1>
+          {/* Enhanced Heading */}
+          <h1 className="text-center text-2xl sm:text-3xl font-bold text-white my-6 neon-text">
+            ECE-23 DETAILS
+          </h1>
 
-        {/* Profile Cards */}
-        <div className="flex flex-wrap justify-center gap-5 px-4 pb-8">
-          {data && data.length > 0 ? (
-            data.map((elem, index) => <Card key={index} currElem={elem} />)
-          ) : (
-            <p className="text-center text-red-400">No data available!</p>
-          )}
-        </div>
+          {/* Profile Cards with max-width container */}
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex flex-wrap justify-center gap-6">
+              {data && data.length > 0 ? (
+                data.map((elem, index) => (
+                  <div
+                    key={index}
+                    className="animate-fade-in"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <Card currElem={elem} />
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-red-400">No data available!</p>
+              )}
+            </div>
+          </div>
+        </main>
 
-        {/* Footer */}
-        <footer className="text-center py-6 bg-gradient-to-t from-black/80 to-transparent">
+        {/* Styled Footer */}
+        <footer className="text-center py-6 bg-gray-900 border-t border-gray-700">
           <div className="max-w-4xl mx-auto px-4">
             <p className="text-sm text-gray-300">
               Developed by{" "}
