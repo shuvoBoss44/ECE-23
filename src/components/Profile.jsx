@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
+import { useEffect, useState } from "react";
 import Background from "./Background";
 
 const Profile = ({ data, placeholderImage }) => {
@@ -20,6 +21,24 @@ const Profile = ({ data, placeholderImage }) => {
     threshold: 0.1,
     rootMargin: "100px", // Preload 100px before visibility
   });
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+  // Scroll to top and disable scroll restoration
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on mount
+    if (history.scrollRestoration) {
+      history.scrollRestoration = "manual"; // Disable browser scroll restoration
+    }
+  }, [roll]);
+
+  const handleImageLoad = () => {
+    setTimeout(() => setIsImageLoaded(true), 300); // Minimum spinner display time
+  };
+
+  const handleImageError = e => {
+    e.target.src = placeholderImage;
+    setTimeout(() => setIsImageLoaded(true), 300); // Minimum spinner display time
+  };
 
   if (!student) {
     return (
@@ -40,7 +59,7 @@ const Profile = ({ data, placeholderImage }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative min-h-screen p-4 md:p-8 pt-20 bg-gradient-to-tr from-slate-900 to-gray-800"
+        className="relative min-h-screen p-4 md:p-8 pt-16 bg-gradient-to-tr from-slate-900 to-gray-800"
       >
         <div className="max-w-5xl mx-auto bg-gray-900/80 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden">
           {/* Cover Photo */}
@@ -69,8 +88,8 @@ const Profile = ({ data, placeholderImage }) => {
               transition={{ delay: 0.2, duration: 0.5 }}
               className="w-40 h-40 md:w-56 md:h-56 rounded-full border-8 border-gray-900 overflow-hidden shadow-lg"
             >
-              {!inView && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gray-800/40 z-20">
+              {(!inView || (inView && !isImageLoaded)) && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gray-700 z-20">
                   <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-400" />
                 </div>
               )}
@@ -79,7 +98,8 @@ const Profile = ({ data, placeholderImage }) => {
                 alt={name}
                 className="w-full h-full object-cover"
                 loading="lazy"
-                onError={e => (e.target.src = placeholderImage)}
+                onLoad={handleImageLoad}
+                onError={handleImageError}
               />
             </motion.div>
 
