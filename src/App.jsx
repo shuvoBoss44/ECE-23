@@ -131,9 +131,8 @@ const App = () => {
           {/* Limitation Notice */}
           <div className="flex justify-center mb-6 px-4 text-sm text-gray-400 text-center max-w-xl mx-auto">
             <p>
-              <strong className="text-yellow-400">Note:</strong> Due to browser
-              rendering behavior, items near the end of the list may take a
-              moment. Before using search feature travel top to bottom one time.
+              <strong className="text-yellow-400">Note:</strong> Before using
+              search feature travel top to bottom one time.
             </p>
           </div>
 
