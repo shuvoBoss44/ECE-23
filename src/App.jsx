@@ -10,10 +10,15 @@ const App = () => {
   const [searchParams] = useSearchParams();
   const searchTimeoutRef = useRef(null);
 
+  // Debounce search input
   const handleSearch = useCallback(e => {
     const value = e.target.value.toLowerCase();
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    searchTimeoutRef.current = setTimeout(() => setSearchTerm(value), 300);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      setSearchTerm(value);
+    }, 300); // 300ms debounce
   }, []);
 
   const scrollToCard = useCallback(roll => {
@@ -26,6 +31,8 @@ const App = () => {
           targetRef.classList.remove("ring-4", "ring-blue-500", "rounded-xl");
         }, 1500);
         setSearchTerm("");
+      } else {
+        console.warn(`No ref found for roll: ${roll}`);
       }
     }, 100);
   }, []);
@@ -36,11 +43,14 @@ const App = () => {
       setTimeout(() => {
         if (cardRefs.current[rollFromParams]) {
           scrollToCard(rollFromParams);
+        } else {
+          console.warn(`No ref found for roll from params: ${rollFromParams}`);
         }
       }, 100);
     }
   }, [searchParams, scrollToCard]);
 
+  // Memoize filtered results
   const filteredResults = useMemo(() => {
     return data.filter(item => {
       const search = searchTerm.toLowerCase();
@@ -57,13 +67,13 @@ const App = () => {
   const placeholderImage =
     "https://zeru.com/blog/wp-content/uploads/How-Do-You-Have-No-Profile-Picture-on-Facebook_25900";
 
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-  };
+  }, []);
 
   return (
     <>
@@ -94,23 +104,23 @@ const App = () => {
             <div className="w-32 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mx-auto mt-4 opacity-80" />
           </div>
 
-          {/* Search Input & Dropdown */}
-          <div className="flex justify-center px-4 relative z-30 mb-4">
+          {/* Search Bar */}
+          <div className="flex justify-center mb-4 px-4 relative z-20">
             <div className="relative w-full max-w-xl">
-              {/* Search Input */}
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <svg
                   className="w-5 h-5 text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
+                  ></path>
                 </svg>
               </div>
               <input
@@ -120,58 +130,58 @@ const App = () => {
                 placeholder="Search by name, roll, district, school, college..."
                 className="w-full pl-10 pr-4 py-3 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 text-white placeholder-gray-400 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg transition-all duration-300 hover:shadow-xl"
               />
-
-              {/* Dropdown */}
-              {searchTerm && (
-                <ul className="absolute top-full mt-2 w-full bg-gray-800 text-white rounded-xl shadow-lg divide-y divide-gray-700 max-h-80 overflow-y-auto z-50">
-                  {filteredResults.length > 0 ? (
-                    filteredResults.map(item => (
-                      <li
-                        key={item.roll}
-                        onClick={() => scrollToCard(item.roll)}
-                        className="flex items-center gap-4 p-3 hover:bg-blue-700 cursor-pointer transition"
-                      >
-                        <img
-                          src={item.image || placeholderImage}
-                          alt={item.name}
-                          className="w-12 h-12 rounded-full border border-blue-400 object-cover"
-                          loading="lazy"
-                          onError={e => (e.target.src = placeholderImage)}
-                        />
-                        <div>
-                          <p className="font-semibold">{item.name}</p>
-                          <p className="text-sm text-gray-300">
-                            Roll: {item.roll} | {item.district}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {item.school}, {item.college}
-                          </p>
-                        </div>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-center py-3 text-red-400">
-                      No matching results
-                    </li>
-                  )}
-                </ul>
-              )}
             </div>
           </div>
-
           {/* Limitation Notice */}
           <div className="flex justify-center mb-6 px-4 text-sm text-gray-400 text-center max-w-xl mx-auto">
             <p>
               <strong className="text-yellow-400">Note:</strong> Due to browser
               rendering behavior, items near the end of the list may take a
-              moment to scroll into view after clicking. Please wait briefly for
-              highlighting to appear.
+              moment. Before using search feature travel top to bottom one time.
             </p>
           </div>
 
+          {/* Search Dropdown */}
+          {searchTerm && (
+            <div className="flex justify-center px-4 mb-4 z-20 relative">
+              <ul className="w-full max-w-xl bg-gray-800 text-white rounded-xl shadow-lg divide-y divide-gray-700 max-h-80 overflow-y-auto">
+                {filteredResults.length > 0 ? (
+                  filteredResults.map(item => (
+                    <li
+                      key={item.roll}
+                      onClick={() => scrollToCard(item.roll)}
+                      className="flex items-center gap-4 p-3 hover:bg-blue-700 cursor-pointer transition"
+                    >
+                      <img
+                        src={item.image || placeholderImage}
+                        alt={item.name}
+                        className="w-12 h-12 rounded-full border border-blue-400 object-cover"
+                        loading="lazy"
+                        onError={e => (e.target.src = placeholderImage)}
+                      />
+                      <div>
+                        <p className="font-semibold">{item.name}</p>
+                        <p className="text-sm text-gray-300">
+                          Roll: {item.roll} | {item.district}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {item.school}, {item.college}
+                        </p>
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-center py-3 text-red-400">
+                    No matching results
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
           {/* Cards */}
           <div className="flex flex-wrap justify-center gap-5 px-4 pb-8 items-stretch">
-            {data.length > 0 ? (
+            {data && data.length > 0 ? (
               data.map(elem => (
                 <div
                   key={elem.roll}
@@ -200,13 +210,14 @@ const App = () => {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
                   d="M5 15l7-7 7 7"
-                />
+                ></path>
               </svg>
             </button>
             <button
@@ -219,13 +230,14 @@ const App = () => {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
                   d="M19 9l-7 7-7-7"
-                />
+                ></path>
               </svg>
             </button>
           </div>
