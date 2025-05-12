@@ -1,81 +1,81 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Background from "./components/Background";
 import Card from "./components/Card";
 import data from "./api/data.json";
 
+// Precompute search strings for each item
+const precomputedData = data.map(item => ({
+  ...item,
+  searchString: [item.name, item.roll, item.district, item.school, item.college]
+    .filter(field => field)
+    .map(field => field.toLowerCase())
+    .join(" "),
+}));
+
 const App = () => {
+  const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const cardRefs = useRef({});
-  const [searchParams] = useSearchParams();
   const searchTimeoutRef = useRef(null);
+  const navigate = useNavigate();
 
-  const handleSearch = useCallback(e => {
-    const value = e.target.value.toLowerCase();
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    searchTimeoutRef.current = setTimeout(() => setSearchTerm(value), 300);
-  }, []);
-
-  const scrollToCard = useCallback((roll, retries = 10) => {
-    setTimeout(() => {
-      const targetRef = cardRefs.current[roll];
-      if (targetRef) {
-        targetRef.scrollIntoView({ behavior: "smooth", block: "center" });
-        targetRef.classList.add("ring-4", "ring-blue-500", "rounded-xl");
-        setTimeout(() => {
-          targetRef.classList.remove("ring-4", "ring-blue-500", "rounded-xl");
-        }, 1500);
-        setSearchTerm("");
-      } else if (retries > 0) {
-        // Retry if ref is not found, with a longer delay
-        scrollToCard(roll, retries - 1);
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
       }
-    }, 200); // Increased delay to ensure DOM rendering
+    };
   }, []);
 
-  useEffect(() => {
-    const rollFromParams = searchParams.get("roll");
-    if (rollFromParams) {
-      setTimeout(() => {
-        scrollToCard(rollFromParams);
-      }, 500); // Increased delay for URL param scroll
-    }
-  }, [searchParams, scrollToCard]);
-
-  // Scroll to bottom then top to force DOM rendering
-  useEffect(() => {
-    setTimeout(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 100); // Delay to ensure bottom scroll completes
-    }, 100); // Initial delay to allow initial render
+  // Handle input and debounce search
+  const handleSearch = useCallback(e => {
+    const value = e.target.value;
+    setInputValue(value);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(
+      () => setSearchTerm(value.toLowerCase().trim()),
+      300
+    );
   }, []);
 
+  // Navigate to profile
+  const goToProfile = useCallback(
+    roll => {
+      navigate(`/profile/${roll}`);
+      setInputValue("");
+      setSearchTerm("");
+    },
+    [navigate]
+  );
+
+  // Filter data based on search term
   const filteredResults = useMemo(() => {
-    return data.filter(item => {
-      const search = searchTerm.toLowerCase();
-      return (
-        item.name.toLowerCase().includes(search) ||
-        item.roll.toLowerCase().includes(search) ||
-        item.district.toLowerCase().includes(search) ||
-        item.school.toLowerCase().includes(search) ||
-        item.college.toLowerCase().includes(search)
-      );
-    });
+    if (!searchTerm) return [];
+    const searchWords = searchTerm.split(/\s+/).filter(word => word.length > 0);
+    if (searchWords.length === 0) return [];
+
+    return precomputedData.filter(item =>
+      searchWords.every(word => item.searchString.includes(word))
+    );
   }, [searchTerm]);
 
-  const placeholderImage =
-    "https://zeru.com/blog/wp-content/uploads/How-Do-You-Have-No-Profile-Picture-on-Facebook_25900";
+  // Memoize placeholder image
+  const placeholderImage = useMemo(
+    () =>
+      "https://zeru.com/blog/wp-content/uploads/How-Do-You-Have-No-Profile-Picture-on-Facebook_25900",
+    []
+  );
 
-  const scrollToTop = () => {
+  // Memoize scrollToTop
+  const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
   return (
     <>
       <Background />
-      <div className="relative min-h-screen">
+      <div className="relative min-h-screen pt-16">
         <div className="relative z-10">
           {/* Logo */}
           <div className="flex justify-center pt-8">
@@ -102,9 +102,8 @@ const App = () => {
           </div>
 
           {/* Search Input & Dropdown */}
-          <div className="flex justify-center px-4 relative z-30 mb-4">
+          <div className="flex justify-center px-4 relative z-30 mb-8">
             <div className="relative w-full max-w-xl">
-              {/* Search Input */}
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <svg
                   className="w-5 h-5 text-gray-400"
@@ -122,20 +121,18 @@ const App = () => {
               </div>
               <input
                 type="text"
-                defaultValue={searchTerm}
+                value={inputValue}
                 onChange={handleSearch}
                 placeholder="Search by name, roll, district, school, college..."
                 className="w-full pl-10 pr-4 py-3 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 text-white placeholder-gray-400 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg transition-all duration-300 hover:shadow-xl"
               />
-
-              {/* Dropdown */}
               {searchTerm && (
                 <ul className="absolute top-full mt-2 w-full bg-gray-800 text-white rounded-xl shadow-lg divide-y divide-gray-700 max-h-80 overflow-y-auto z-50">
                   {filteredResults.length > 0 ? (
                     filteredResults.map(item => (
                       <li
                         key={item.roll}
-                        onClick={() => scrollToCard(item.roll)}
+                        onClick={() => goToProfile(item.roll)}
                         className="flex items-center gap-4 p-3 hover:bg-blue-700 cursor-pointer transition"
                       >
                         <img
@@ -166,16 +163,16 @@ const App = () => {
             </div>
           </div>
 
-          {/* Cards */}
+          {/* Card List */}
           <div className="flex flex-wrap justify-center gap-5 px-4 pb-8 items-stretch">
-            {data.length > 0 ? (
-              data.map(elem => (
+            {precomputedData.length > 0 ? (
+              precomputedData.map(elem => (
                 <div
                   key={elem.roll}
-                  ref={el => (cardRefs.current[elem.roll] = el)}
                   className="flex"
+                  onClick={() => goToProfile(elem.roll)}
                 >
-                  <Card currElem={elem} />
+                  <Card currElem={elem} placeholderImage={placeholderImage} />
                 </div>
               ))
             ) : (
