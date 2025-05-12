@@ -1,5 +1,5 @@
 import { FaFacebook, FaPhone, FaInstagram, FaWhatsapp } from "react-icons/fa";
-import { useState, memo } from "react";
+import { useState, memo, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 
 const Card = memo(({ currElem }) => {
@@ -7,10 +7,15 @@ const Card = memo(({ currElem }) => {
     triggerOnce: true,
     threshold: 0.1,
   });
+  const [loadImage, setLoadImage] = useState(false);
+  const placeholderImage =
+    "https://zeru.com/blog/wp-content/uploads/How-Do-You-Have-No-Profile-Picture-on-Facebook_25900";
 
   const { facebook, phone, instagram, whatsapp } = currElem.socialMedia;
-  const [imageSrc, setImageSrc] = useState(`./${currElem.image}`);
-  const [isImageLoading, setIsImageLoading] = useState(true);
+
+  useEffect(() => {
+    if (inView) setLoadImage(true);
+  }, [inView]);
 
   return (
     <div
@@ -26,7 +31,7 @@ const Card = memo(({ currElem }) => {
           {/* Profile image */}
           <div className="relative z-10 flex justify-center mb-6">
             <div className="relative w-64 h-64 sm:w-56 sm:h-56">
-              {isImageLoading && (
+              {!loadImage && (
                 <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gray-800/40 border-4 border-white/10 z-20">
                   <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-400" />
                 </div>
@@ -34,17 +39,16 @@ const Card = memo(({ currElem }) => {
               <div className="absolute inset-0 before:absolute before:-inset-1.5 before:bg-gradient-to-r before:from-blue-400 before:via-purple-400 before:to-pink-400 before:rounded-full before:animate-rotate before:opacity-50 z-0" />
               <img
                 className={`w-64 h-64 sm:w-56 sm:h-56 object-cover rounded-full border-4 border-white/20 shadow-2xl transition-opacity duration-300 relative z-10 ${
-                  isImageLoading ? "opacity-0" : "opacity-100"
+                  loadImage ? "opacity-100" : "opacity-0"
                 }`}
-                src={imageSrc}
+                src={
+                  loadImage && currElem.image
+                    ? `./${currElem.image}`
+                    : placeholderImage
+                }
                 alt={currElem.name}
-                loading="lazy"
-                onLoad={() => setIsImageLoading(false)}
-                onError={() => {
-                  setImageSrc(
-                    "https://zeru.com/blog/wp-content/uploads/How-Do-You-Have-No-Profile-Picture-on-Facebook_25900"
-                  );
-                  setIsImageLoading(false);
+                onError={e => {
+                  e.target.src = placeholderImage;
                 }}
               />
             </div>

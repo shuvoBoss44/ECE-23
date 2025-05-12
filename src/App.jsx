@@ -16,7 +16,7 @@ const App = () => {
     searchTimeoutRef.current = setTimeout(() => setSearchTerm(value), 300);
   }, []);
 
-  const scrollToCard = useCallback(roll => {
+  const scrollToCard = useCallback((roll, retries = 10) => {
     setTimeout(() => {
       const targetRef = cardRefs.current[roll];
       if (targetRef) {
@@ -26,25 +26,30 @@ const App = () => {
           targetRef.classList.remove("ring-4", "ring-blue-500", "rounded-xl");
         }, 1500);
         setSearchTerm("");
+      } else if (retries > 0) {
+        // Retry if ref is not found, with a longer delay
+        scrollToCard(roll, retries - 1);
       }
-    }, 100);
+    }, 200); // Increased delay to ensure DOM rendering
   }, []);
 
   useEffect(() => {
     const rollFromParams = searchParams.get("roll");
     if (rollFromParams) {
       setTimeout(() => {
-        if (cardRefs.current[rollFromParams]) {
-          scrollToCard(rollFromParams);
-        }
-      }, 100);
+        scrollToCard(rollFromParams);
+      }, 500); // Increased delay for URL param scroll
     }
   }, [searchParams, scrollToCard]);
 
   // Scroll to bottom then top to force DOM rendering
   useEffect(() => {
-    window.scrollTo(0, document.body.scrollHeight);
-    window.scrollTo(0, 0);
+    setTimeout(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100); // Delay to ensure bottom scroll completes
+    }, 100); // Initial delay to allow initial render
   }, []);
 
   const filteredResults = useMemo(() => {
@@ -159,14 +164,6 @@ const App = () => {
                 </ul>
               )}
             </div>
-          </div>
-
-          {/* Limitation Notice */}
-          <div className="flex justify-center mb-6 px-4 text-sm text-gray-400 text-center max-w-xl mx-auto">
-            <p>
-              <strong className="text-yellow-400">Note:</strong> Before using
-              search feature travel top to bottom one time.
-            </p>
           </div>
 
           {/* Cards */}
