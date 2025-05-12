@@ -1,10 +1,12 @@
 import { FaFacebook, FaPhone, FaInstagram, FaWhatsapp } from "react-icons/fa";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useInView } from "react-intersection-observer";
-import { memo } from "react";
 
 const Card = memo(({ currElem }) => {
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+  const { ref: inViewRef, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
 
   const { facebook, phone, instagram, whatsapp } = currElem.socialMedia;
   const [imageSrc, setImageSrc] = useState(`./${currElem.image}`);
@@ -12,27 +14,24 @@ const Card = memo(({ currElem }) => {
 
   return (
     <div
-      ref={ref}
+      ref={inViewRef}
       className="w-[90vw] max-w-md sm:w-96 md:w-80 p-6 transition-all duration-300 ease-in-out hover:-translate-y-2 bg-gradient-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-xl rounded-2xl shadow-xl relative overflow-hidden group"
     >
       {inView && (
         <>
-          {/* Border animation - lighter version */}
+          {/* Subtle animated border layer */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 rounded-2xl" />
           <div className="absolute inset-0 border border-white/5 rounded-2xl group-hover:border-white/20 transition-all duration-300" />
 
-          {/* Image */}
+          {/* Profile image */}
           <div className="relative z-10 flex justify-center mb-6">
             <div className="relative w-64 h-64 sm:w-56 sm:h-56">
-              {/* Spinner */}
               {isImageLoading && (
                 <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gray-800/40 border-4 border-white/10 z-20">
                   <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-400" />
                 </div>
               )}
-              {/* Animated border ring */}
               <div className="absolute inset-0 before:absolute before:-inset-1.5 before:bg-gradient-to-r before:from-blue-400 before:via-purple-400 before:to-pink-400 before:rounded-full before:animate-rotate before:opacity-50 z-0" />
-              {/* Image itself */}
               <img
                 className={`w-64 h-64 sm:w-56 sm:h-56 object-cover rounded-full border-4 border-white/20 shadow-2xl transition-opacity duration-300 relative z-10 ${
                   isImageLoading ? "opacity-0" : "opacity-100"
@@ -51,7 +50,7 @@ const Card = memo(({ currElem }) => {
             </div>
           </div>
 
-          {/* Content */}
+          {/* Name and info */}
           <div className="relative z-10 text-left space-y-4">
             <div className="text-center">
               <h2 className="text-3xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent drop-shadow-md">
@@ -81,7 +80,7 @@ const Card = memo(({ currElem }) => {
               "{currElem.quote}"
             </blockquote>
 
-            {/* Social Media */}
+            {/* Social media icons */}
             <div className="flex justify-center space-x-4 mt-6">
               {facebook && (
                 <a

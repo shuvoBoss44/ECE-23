@@ -22,6 +22,8 @@
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
     "react-intersection-observer": "^9.16.0",
+    "react-router-dom": "^7.6.0",
+    "react-window": "^1.8.11",
     "sharp": "^0.34.1",
     "tailwindcss": "^4.0.9",
     "three": "^0.174.0"
