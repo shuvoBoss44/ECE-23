@@ -59,7 +59,7 @@ const Profile = ({ data, placeholderImage }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative min-h-screen p-4 md:p-8 pt-16 bg-gradient-to-tr from-slate-900 to-gray-800"
+        className="relative min-h-screen p-4 md:p-8 pt-4 bg-gradient-to-tr from-slate-900 to-gray-800"
       >
         <div className="max-w-5xl mx-auto bg-gray-900/80 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden">
           {/* Cover Photo */}

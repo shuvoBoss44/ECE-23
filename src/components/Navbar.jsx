@@ -12,14 +12,14 @@ const Navbar = () => {
           </div>
 
           {/* Navigation Links (horizontal always) */}
-          <div className="flex space-x-6 items-center">
+          <div className="flex space-x-1 items-center">
             <NavLink
               to="/"
               className={({ isActive }) =>
-                `relative px-3 py-1.5 text-sm font-medium transition-all duration-300 ${
+                `relative px-3 py-1.5 text-base font-bold tracking-wide uppercase text-transparent bg-clip-text max-sm:ml-3 ${
                   isActive
-                    ? "text-white after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-blue-400 after:to-purple-400"
-                    : "text-gray-300 hover:text-white"
+                    ? "bg-gradient-to-r from-blue-400 to-purple-400 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-blue-400 after:to-purple-400 animate-neon-glow"
+                    : "bg-gradient-to-r from-gray-300 to-gray-400 hover:from-blue-400 hover:to-purple-400 hover:scale-105 transition-all duration-300"
                 }`
               }
             >
@@ -29,10 +29,10 @@ const Navbar = () => {
             <NavLink
               to="/intro-generator"
               className={({ isActive }) =>
-                `relative px-3 py-1.5 text-sm font-medium transition-all duration-300 ${
+                `relative px-3 py-1.5 text-base font-bold tracking-wide uppercase text-transparent bg-clip-text ${
                   isActive
-                    ? "text-white after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-blue-400 after:to-purple-400"
-                    : "text-gray-300 hover:text-white"
+                    ? "bg-gradient-to-r from-blue-400 to-purple-400 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gradient-to-r after:from-blue-400 after:to-purple-400 animate-neon-glow"
+                    : "bg-gradient-to-r from-gray-300 to-gray-400 hover:from-blue-400 hover:to-purple-400 hover:scale-105 transition-all duration-300"
                 }`
               }
             >
