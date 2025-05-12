@@ -166,12 +166,12 @@ const IntroGenerator = () => {
               {vaiyaIntro && (
                 <div className="p-6 bg-gray-800 rounded-lg shadow-lg">
                   <div className="flex justify-between items-center h-16 border-b border-gray-700 bg-gray-900 rounded-t-lg px-4">
-                    <h2 className="text-2xl font-bold text-gray-200 self-center">
+                    <h2 className="text-base md:text-2xl font-bold text-gray-200 self-center">
                       ভাইয়ের জন্য ইন্ট্রো
                     </h2>
                     <button
                       onClick={copyVaiyaToClipboard}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-xl transition-all duration-300 self-center"
+                      className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-sm md:text-base text-white font-semibold rounded-lg hover:shadow-xl transition-all duration-300 self-center"
                     >
                       {vaiyaCopied ? "কপি করা হয়েছে!" : "কপি করুন"}
                     </button>
@@ -185,12 +185,12 @@ const IntroGenerator = () => {
               {apuIntro && (
                 <div className="p-6 bg-gray-800 rounded-lg shadow-lg">
                   <div className="flex justify-between items-center h-16 border-b border-gray-700 bg-gray-900 rounded-t-lg px-4">
-                    <h2 className="text-2xl font-bold text-gray-200 self-center">
+                    <h2 className="text-base md:text-2xl font-bold text-gray-200 self-center">
                       আপুর জন্য ইন্ট্রো
                     </h2>
                     <button
                       onClick={copyApuToClipboard}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-xl transition-all duration-300 self-center"
+                      className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-sm md:text-base text-white font-semibold rounded-lg hover:shadow-xl transition-all duration-300 self-center"
                     >
                       {apuCopied ? "কপি করা হয়েছে!" : "কপি করুন"}
                     </button>
