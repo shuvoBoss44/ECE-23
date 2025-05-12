@@ -71,10 +71,6 @@ const App = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const scrollToBottom = useCallback(() => {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-  }, []);
-
   return (
     <>
       <Background />
@@ -217,26 +213,6 @@ const App = () => {
                   strokeLinejoin="round"
                   strokeWidth="2"
                   d="M5 15l7-7 7 7"
-                ></path>
-              </svg>
-            </button>
-            <button
-              onClick={scrollToBottom}
-              className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-              title="Go to Bottom"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 9l-7 7-7-7"
                 ></path>
               </svg>
             </button>
