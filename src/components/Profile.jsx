@@ -11,7 +11,10 @@ import { useInView } from "react-intersection-observer";
 import { useEffect, useState } from "react";
 import Background from "./Background";
 
-const Profile = ({ data, placeholderImage }) => {
+const Profile = ({
+  data,
+  placeholderImage = "https://zeru.com/blog/wp-content/uploads/How-Do-You-Have-No-Profile-Picture-on-Facebook_25900",
+}) => {
   const { roll } = useParams();
   const navigate = useNavigate();
   const student = data.find(item => item.roll === roll);
