@@ -39,7 +39,7 @@ const Card = memo(({ currElem }) => {
           {/* See Profile Button - Top Right */}
           <button
             onClick={handleSeeProfile}
-            className="absolute top-4 right-4 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md backdrop-blur-sm hover:from-blue-600 hover:to-purple-600 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400/50 z-20"
+            className="absolute top-4 right-4 flex items-center justify-center w-10 h-10 rounded-full bg-transparent border-2 border-white/50 text-white shadow-lg drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] hover:border-blue-400 hover:text-blue-400 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400/50 z-20"
             title="See Profile"
           >
             <FaChevronRight className="w-5 h-5" />
