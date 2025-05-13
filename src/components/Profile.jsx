@@ -127,13 +127,11 @@ const Profile = ({
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate("/")}
+              onClick={() => navigate(-1)} // Changed from navigate("/") to navigate(-1)
               className="mt-4 p-3 bg-white/20 rounded-full hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center gap-2"
             >
               <FaArrowLeft className="text-white w-5 h-5" />
-              <span className="text-white text-sm font-medium">
-                Back to Home
-              </span>
+              <span className="text-white text-sm font-medium">Back</span>
             </motion.button>
           </div>
 
