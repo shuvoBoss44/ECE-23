@@ -2,14 +2,21 @@ import { FaFacebook, FaPhone, FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { memo } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Card = memo(({ currElem }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+  const navigate = useNavigate();
 
   const { facebook, phone, instagram, whatsapp } = currElem.socialMedia;
   const [imageSrc, setImageSrc] = useState(`./${currElem.image}`);
   const [isImageLoading, setIsImageLoading] = useState(true);
+
+  const handleSeeProfile = () => {
+    navigate(`/profile/${currElem.roll}`, {
+      state: { from: "home", cardId: currElem.roll },
+    });
+  };
 
   return (
     <div
@@ -18,14 +25,32 @@ const Card = memo(({ currElem }) => {
       className="w-[90vw] max-w-md sm:w-96 md:w-80 p-6 transition-all duration-300 ease-in-out hover:-translate-y-2 bg-gradient-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-xl rounded-2xl shadow-xl relative overflow-hidden group"
     >
       {inView && (
-        <Link
-          to={`/profile/${currElem.roll}`}
-          state={{ from: "home", cardId: currElem.roll }} // Pass navigation state
-          className="block"
-        >
+        <>
           {/* Border animation - lighter version */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 rounded-2xl" />
           <div className="absolute inset-0 border border-white/5 rounded-2xl group-hover:border-white/20 transition-all duration-300" />
+
+          {/* See Profile Button - Top Right */}
+          <button
+            onClick={handleSeeProfile}
+            className="absolute top-4 right-4 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-400/50 text-white text-sm font-medium hover:bg-gradient-to-r hover:from-blue-600/30 hover:to-purple-600/30 hover:border-blue-400 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400/50 z-20"
+            title="See Profile"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
 
           {/* Image */}
           <div className="relative z-10 flex justify-center mb-6">
@@ -60,7 +85,7 @@ const Card = memo(({ currElem }) => {
           {/* Content */}
           <div className="relative z-10 text-left space-y-4">
             <div className="text-center">
-              <h2 className="text-3xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent drop-shadow-md">
+              <h2 className="text-3xl sm:text-2xl font-bold bgBY-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent drop-shadow-md">
                 {currElem.name}
               </h2>
               <p className="text-2xl sm:text-xl font-semibold text-blue-300 mt-1">
@@ -88,10 +113,7 @@ const Card = memo(({ currElem }) => {
             </blockquote>
 
             {/* Social Media */}
-            <div
-              onClick={e => e.stopPropagation()} // Prevent Link navigation
-              className="flex justify-center space-x-4 mt-6"
-            >
+            <div className="flex justify-center space-x-4 mt-6">
               {facebook && (
                 <a
                   href={facebook}
@@ -132,7 +154,7 @@ const Card = memo(({ currElem }) => {
               )}
             </div>
           </div>
-        </Link>
+        </>
       )}
     </div>
   );
