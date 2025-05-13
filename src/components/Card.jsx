@@ -1,4 +1,10 @@
-import { FaFacebook, FaPhone, FaInstagram, FaWhatsapp } from "react-icons/fa";
+import {
+  FaFacebook,
+  FaPhone,
+  FaInstagram,
+  FaWhatsapp,
+  FaChevronRight,
+} from "react-icons/fa";
 import { useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { memo } from "react";
@@ -33,23 +39,10 @@ const Card = memo(({ currElem }) => {
           {/* See Profile Button - Top Right */}
           <button
             onClick={handleSeeProfile}
-            className="absolute top-4 right-4 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-400/50 text-white text-sm font-medium hover:bg-gradient-to-r hover:from-blue-600/30 hover:to-purple-600/30 hover:border-blue-400 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400/50 z-20"
+            className="absolute top-4 right-4 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md backdrop-blur-sm hover:from-blue-600 hover:to-purple-600 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400/50 z-20"
             title="See Profile"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            <FaChevronRight className="w-5 h-5" />
           </button>
 
           {/* Image */}
@@ -85,7 +78,7 @@ const Card = memo(({ currElem }) => {
           {/* Content */}
           <div className="relative z-10 text-left space-y-4">
             <div className="text-center">
-              <h2 className="text-3xl sm:text-2xl font-bold bgBY-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent drop-shadow-md">
+              <h2 className="text-3xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent drop-shadow-md">
                 {currElem.name}
               </h2>
               <p className="text-2xl sm:text-xl font-semibold text-blue-300 mt-1">
