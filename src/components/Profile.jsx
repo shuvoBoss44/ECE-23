@@ -157,7 +157,7 @@ const Profile = ({
               <h2 className="text-2xl font-bold text-white mb-4">About</h2>
               <div className="grid md:grid-cols-2 gap-4 text-gray-200 text-lg">
                 <p>
-                  <span className="text-blue-400 font-semibold">District:</span>{" "}
+                  <span className="text-blue-400 font-semibold">Hometown:</span>{" "}
                   {district || "Not provided"}
                 </p>
                 <p>

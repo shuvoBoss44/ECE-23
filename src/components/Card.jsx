@@ -78,7 +78,7 @@ const Card = memo(({ currElem }) => {
                 {currElem.school}
               </p>
               <p>
-                <strong className="text-pink-400">District:</strong>{" "}
+                <strong className="text-pink-400">Hometown:</strong>{" "}
                 {currElem.district}
               </p>
             </div>
