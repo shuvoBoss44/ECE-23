@@ -2,6 +2,7 @@ import { FaFacebook, FaPhone, FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { memo } from "react";
+import { Link } from "react-router-dom";
 
 const Card = memo(({ currElem }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
@@ -12,11 +13,16 @@ const Card = memo(({ currElem }) => {
 
   return (
     <div
+      id={`card-${currElem.roll}`} // Unique ID for scrolling
       ref={ref}
       className="w-[90vw] max-w-md sm:w-96 md:w-80 p-6 transition-all duration-300 ease-in-out hover:-translate-y-2 bg-gradient-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-xl rounded-2xl shadow-xl relative overflow-hidden group"
     >
       {inView && (
-        <>
+        <Link
+          to={`/profile/${currElem.roll}`}
+          state={{ from: "home", cardId: currElem.roll }} // Pass navigation state
+          className="block"
+        >
           {/* Border animation - lighter version */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 rounded-2xl" />
           <div className="absolute inset-0 border border-white/5 rounded-2xl group-hover:border-white/20 transition-all duration-300" />
@@ -82,7 +88,10 @@ const Card = memo(({ currElem }) => {
             </blockquote>
 
             {/* Social Media */}
-            <div className="flex justify-center space-x-4 mt-6">
+            <div
+              onClick={e => e.stopPropagation()} // Prevent Link navigation
+              className="flex justify-center space-x-4 mt-6"
+            >
               {facebook && (
                 <a
                   href={facebook}
@@ -123,7 +132,7 @@ const Card = memo(({ currElem }) => {
               )}
             </div>
           </div>
-        </>
+        </Link>
       )}
     </div>
   );

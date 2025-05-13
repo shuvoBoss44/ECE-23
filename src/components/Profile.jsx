@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   FaFacebook,
   FaPhone,
@@ -17,6 +17,7 @@ const Profile = ({
 }) => {
   const { roll } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const student = data.find(item => item.roll === roll);
 
   const { ref: inViewRef, inView } = useInView({
@@ -41,6 +42,17 @@ const Profile = ({
   const handleImageError = e => {
     e.target.src = placeholderImage;
     setTimeout(() => setIsImageLoaded(true), 300); // Minimum spinner display time
+  };
+
+  // Handle back navigation
+  const handleBack = () => {
+    if (location.state?.from === "home" && location.state?.cardId) {
+      // Navigate back to Home with cardId to scroll to the specific card
+      navigate("/", { state: { cardId: location.state.cardId } });
+    } else {
+      // Fallback to previous page (e.g., Search or direct access)
+      navigate(-1);
+    }
   };
 
   if (!student) {
@@ -68,7 +80,6 @@ const Profile = ({
           {/* Cover Photo */}
           <div className="relative h-64 md:h-80 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500">
             <div className="absolute inset-0 bg-black/40" />
-
             {/* Quote at Top */}
             {quote && (
               <motion.blockquote
@@ -127,7 +138,7 @@ const Profile = ({
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate(-1)} // Changed from navigate("/") to navigate(-1)
+              onClick={handleBack} // Use the new handleBack function
               className="mt-4 p-3 bg-white/20 rounded-full hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center gap-2"
             >
               <FaArrowLeft className="text-white w-5 h-5" />

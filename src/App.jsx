@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Background from "./components/Background";
 import Card from "./components/Card";
 import data from "./api/data.json";
@@ -18,6 +18,19 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const searchTimeoutRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Scroll to card when returning from Profile
+  useEffect(() => {
+    if (location.state?.cardId) {
+      const cardElement = document.getElementById(
+        `card-${location.state.cardId}`
+      );
+      if (cardElement) {
+        cardElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [location]);
 
   // Cleanup debounce timeout on unmount
   useEffect(() => {
@@ -42,7 +55,7 @@ const App = () => {
   // Navigate to profile
   const goToProfile = useCallback(
     roll => {
-      navigate(`/profile/${roll}`);
+      navigate(`/profile/${roll}`, { state: { from: "search" } }); // Pass search state
       setInputValue("");
       setSearchTerm("");
     },
@@ -167,11 +180,7 @@ const App = () => {
           <div className="flex flex-wrap justify-center gap-5 px-4 pb-8 items-stretch">
             {precomputedData.length > 0 ? (
               precomputedData.map(elem => (
-                <div
-                  key={elem.roll}
-                  className="flex"
-                  onClick={() => goToProfile(elem.roll)}
-                >
+                <div key={elem.roll} className="flex">
                   <Card currElem={elem} placeholderImage={placeholderImage} />
                 </div>
               ))
