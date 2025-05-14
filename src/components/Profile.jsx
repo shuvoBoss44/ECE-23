@@ -23,41 +23,37 @@ const Profile = ({
   const { ref: inViewRef, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
-    rootMargin: "100px", // Preload 100px before visibility
+    rootMargin: "100px",
   });
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
-  // Scroll to top and disable scroll restoration
   useEffect(() => {
-    window.scrollTo(0, 0); // Scroll to top on mount
+    window.scrollTo(0, 0);
     if (history.scrollRestoration) {
-      history.scrollRestoration = "manual"; // Disable browser scroll restoration
+      history.scrollRestoration = "manual";
     }
   }, [roll]);
 
   const handleImageLoad = () => {
-    setTimeout(() => setIsImageLoaded(true), 300); // Minimum spinner display time
+    setTimeout(() => setIsImageLoaded(true), 300);
   };
 
   const handleImageError = e => {
     e.target.src = placeholderImage;
-    setTimeout(() => setIsImageLoaded(true), 300); // Minimum spinner display time
+    setTimeout(() => setIsImageLoaded(true), 300);
   };
 
-  // Handle back navigation
   const handleBack = () => {
     if (location.state?.from === "home" && location.state?.cardId) {
-      // Navigate back to Home with cardId to scroll to the specific card
       navigate("/", { state: { cardId: location.state.cardId } });
     } else {
-      // Fallback to previous page (e.g., Search or direct access)
       navigate(-1);
     }
   };
 
   if (!student) {
     return (
-      <div className="text-center text-red-500 text-xl font-semibold py-10">
+      <div className="text-center text-red-500 text-lg font-semibold py-8">
         Student not found!
       </div>
     );
@@ -70,167 +66,195 @@ const Profile = ({
   return (
     <>
       <Background />
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative min-h-screen p-4 md:p-8 pt-4 bg-gradient-to-tr from-slate-900 to-gray-800"
-      >
-        <div className="max-w-5xl mx-auto bg-gray-900/80 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden">
-          {/* Cover Photo */}
-          <div className="relative h-64 md:h-80 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500">
-            <div className="absolute inset-0 bg-black/40" />
-            {/* Quote at Top */}
-            {quote && (
-              <motion.blockquote
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.6 }}
-                className="absolute top-4 left-1/2 transform -translate-x-1/2 w-11/12 md:w-3/4 text-center text-white text-xl md:text-2xl font-semibold italic drop-shadow-lg px-2"
-              >
-                “{quote}”
-              </motion.blockquote>
-            )}
-          </div>
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex-grow p-3 sm:p-6 md:p-8 pt-3"
+        >
+          {/* Back Button at Top */}
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleBack}
+            className="mb-4 p-2 sm:p-3 bg-blue-500/80 rounded-full hover:bg-blue-600 transition-all backdrop-blur-sm flex items-center gap-2"
+          >
+            <FaArrowLeft className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-white text-xs sm:text-sm font-medium">
+              Back
+            </span>
+          </motion.button>
 
-          {/* Profile Info Header */}
-          <div className="relative -mt-28 flex flex-col items-center px-4">
-            <motion.div
-              ref={inViewRef}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="w-40 h-40 md:w-56 md:h-56 rounded-full border-8 border-gray-900 overflow-hidden shadow-lg"
-            >
-              {(!inView || (inView && !isImageLoaded)) && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gray-700 z-20">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-400" />
-                </div>
-              )}
-              <img
-                src={inView && image ? `/${image}` : placeholderImage}
-                alt={name}
-                className="w-full h-full object-cover"
-                loading="lazy"
-                onLoad={handleImageLoad}
-                onError={handleImageError}
+          <div className="max-w-4xl mx-auto bg-gray-900/85 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-blue-500/20">
+            {/* Cover Photo */}
+            <div className="relative h-48 sm:h-60 md:h-72 bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-t from-transparent to-blue-500/20 animate-pulse-slow"
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 5, repeat: Infinity }}
               />
-            </motion.div>
+              {quote && (
+                <motion.blockquote
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
+                  className="absolute top-4 left-1/2 transform -translate-x-1/2 w-11/12 sm:w-3/4 text-center text-white text-base sm:text-lg md:text-xl font-serif italic drop-shadow-lg px-3"
+                >
+                  <span className="text-blue-200">“</span>
+                  {quote}
+                  <span className="text-blue-200">”</span>
+                </motion.blockquote>
+              )}
+            </div>
 
-            <motion.h1
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.4 }}
-              className="mt-4 text-white text-3xl md:text-4xl font-bold text-center"
-            >
-              {name}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.4 }}
-              className="text-blue-300 text-lg md:text-xl font-medium"
-            >
-              Roll: {roll}
-            </motion.p>
+            {/* Profile Info Header */}
+            <div className="relative -mt-20 sm:-mt-24 md:-mt-28 flex flex-col items-center px-3 sm:px-4">
+              <motion.div
+                ref={inViewRef}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-full border-4 sm:border-6 border-blue-500/50 overflow-hidden shadow-lg relative group"
+              >
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/30 to-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {(!inView || (inView && !isImageLoaded)) && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gray-800/80 z-20">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-3 border-b-3 border-blue-400" />
+                  </div>
+                )}
+                <img
+                  src={inView && image ? `/${image}` : placeholderImage}
+                  alt={name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                />
+              </motion.div>
 
-            {/* Back Button */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleBack} // Use the new handleBack function
-              className="mt-4 p-3 bg-white/20 rounded-full hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center gap-2"
-            >
-              <FaArrowLeft className="text-white w-5 h-5" />
-              <span className="text-white text-sm font-medium">Back</span>
-            </motion.button>
-          </div>
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.4 }}
+                className="mt-3 text-white text-2xl sm:text-3xl md:text-4xl font-extrabold text-center tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-purple-300"
+              >
+                {name}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+                className="text-blue-300 text-base sm:text-lg md:text-xl font-medium"
+              >
+                Roll: {roll}
+              </motion.p>
+            </div>
 
-          {/* About Section */}
-          <div className="p-6 md:p-10 space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="bg-gray-800/60 rounded-xl p-6 md:p-8 shadow-md"
-            >
-              <h2 className="text-2xl font-bold text-white mb-4">About</h2>
-              <div className="grid md:grid-cols-2 gap-4 text-gray-200 text-lg">
-                <p>
-                  <span className="text-blue-400 font-semibold">Hometown:</span>{" "}
-                  {district || "Not provided"}
-                </p>
-                <p>
-                  <span className="text-blue-400 font-semibold">School:</span>{" "}
-                  {school || "Not provided"}
-                </p>
-                <p>
-                  <span className="text-blue-400 font-semibold">College:</span>{" "}
-                  {college || "Not provided"}
-                </p>
-              </div>
-            </motion.div>
-
-            {/* Social Media Links */}
-            {(facebook || phone || instagram || whatsapp) && (
+            {/* About Section */}
+            <div className="p-4 sm:p-6 md:p-8 space-y-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.5 }}
-                className="bg-gray-800/60 rounded-xl p-6 md:p-8 shadow-md"
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="bg-gray-800/70 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/20 transition-shadow duration-300"
               >
-                <h2 className="text-2xl font-bold text-white mb-4 text-center">
-                  Connect
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                  About
                 </h2>
-                <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-                  {facebook && (
-                    <a
-                      href={facebook}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-3 sm:p-4 bg-blue-600 rounded-full hover:bg-blue-700 transition"
-                    >
-                      <FaFacebook className="text-white w-5 h-5 sm:w-6 sm:h-6" />
-                    </a>
-                  )}
-                  {phone && (
-                    <a
-                      href={`tel:${phone}`}
-                      className="p-3 sm:p-4 bg-green-600 rounded-full hover:bg-green-700 transition"
-                    >
-                      <FaPhone className="text-white w-5 h-5 sm:w-6 sm:h-6" />
-                    </a>
-                  )}
-                  {instagram && (
-                    <a
-                      href={instagram}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-3 sm:p-4 bg-pink-600 rounded-full hover:bg-pink-700 transition"
-                    >
-                      <FaInstagram className="text-white w-5 h-5 sm:w-6 sm:h-6" />
-                    </a>
-                  )}
-                  {whatsapp && (
-                    <a
-                      href={whatsapp}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-3 sm:p-4 bg-green-500 rounded-full hover:bg-green-600 transition"
-                    >
-                      <FaWhatsapp className="text-white w-5 h-5 sm:w-6 sm:h-6" />
-                    </a>
-                  )}
+                <div className="grid md:grid-cols-2 gap-3 text-gray-200 text-sm sm:text-base">
+                  <p className="flex items-center gap-2">
+                    <span className="text-blue-400 font-semibold">
+                      Hometown:
+                    </span>{" "}
+                    {district || "Not provided"}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="text-blue-400 font-semibold">School:</span>{" "}
+                    {school || "Not provided"}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="text-blue-400 font-semibold">
+                      College:
+                    </span>{" "}
+                    {college || "Not provided"}
+                  </p>
                 </div>
               </motion.div>
-            )}
+
+              {/* Social Media Links */}
+              {(facebook || phone || instagram || whatsapp) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                  className="bg-gray-800/70 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/20 transition-shadow duration-300"
+                >
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                    Connect
+                  </h2>
+                  <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+                    {facebook && (
+                      <motion.a
+                        href={facebook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 sm:p-3 bg-blue-600 rounded-full hover:bg-blue-700 transition"
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <FaFacebook className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                      </motion.a>
+                    )}
+                    {phone && (
+                      <motion.a
+                        href={`tel:${phone}`}
+                        className="p-2 sm:p-3 bg-green-600 rounded-full hover:bg-green-700 transition"
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <FaPhone className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                      </motion.a>
+                    )}
+                    {instagram && (
+                      <motion.a
+                        href={instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 sm:p-3 bg-pink-600 rounded-full hover:bg-pink-700 transition"
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <FaInstagram className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                      </motion.a>
+                    )}
+                    {whatsapp && (
+                      <motion.a
+                        href={whatsapp}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 sm:p-3 bg-green-500 rounded-full hover:bg-green-600 transition"
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <FaWhatsapp className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                      </motion.a>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Footer */}
-        <footer className="text-center py-6 bg-gradient-to-t from-black/80 to-transparent mt-8">
-          <div className="max-w-4xl mx-auto px-4">
-            <p className="text-sm text-gray-300">
+        <footer className="w-full py-4 sm:py-6 bg-gradient-to-t from-slate-900 to-transparent">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <p className="text-xs sm:text-sm text-gray-300">
               Developed by{" "}
               <a
                 href="https://www.facebook.com/shuvo.chakma.16121/"
@@ -246,7 +270,7 @@ const Profile = ({
             </p>
           </div>
         </footer>
-      </motion.div>
+      </div>
     </>
   );
 };
