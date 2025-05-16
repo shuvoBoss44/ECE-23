@@ -1,7 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { semesters } from "./NotesPage";
 import Background from "./Background";
 import { motion } from "framer-motion";
+
+// Define semesters data directly
+const semesters = [
+  {
+    name: "1st Year Odd",
+    courses: [
+      "ECE 1101 - Circuits and Systems - I",
+      "ECE 1102 - Circuits and Systems - I Sessional",
+      "ECE 1103 - Computer Programming",
+      "ECE 1104 - Computer Programming Sessional",
+      "Math 1117 - Calculus and Co-ordinate Geometry",
+      "Phy 1117 - Optics and Modern Physics",
+      "Phy 1118 - Optics and Modern Physics Sessional",
+      "Hum 1117 - Technical English",
+      "Hum 1118 - Technical English Sessional",
+      "ECE 1100 - Introduction to Computer System",
+    ],
+  },
+];
 
 const NoteUploadPage = () => {
   const [title, setTitle] = useState("");
@@ -14,6 +32,7 @@ const NoteUploadPage = () => {
 
   // Debug state changes
   useEffect(() => {
+    console.log("Semesters:", semesters);
     console.log("Semester:", semester, "CourseNo:", courseNo);
   }, [semester, courseNo]);
 
@@ -124,7 +143,7 @@ const NoteUploadPage = () => {
           transition={{ duration: 0.6 }}
           className="bg-gray-900/80 backdrop-blur-lg rounded-xl max-w-lg w-full p-4 sm:p-6 border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-shadow z-10 mx-auto mt-8"
         >
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-transparent bg-clip-text(bg-gradient-to-r from-blue-400 to-purple-400 mb-6 text-center">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6 text-center">
             Upload a Note
           </h2>
           {error && (
@@ -205,6 +224,7 @@ const NoteUploadPage = () => {
                 id="courseNo"
                 value={courseNo}
                 onChange={e => setCourseNo(e.target.value)}
+                onClick={() => console.log("Course dropdown clicked")}
                 required
                 disabled={!semester || courses.length === 0}
                 className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition appearance-none cursor-pointer disabled:bg-gray-700/50 disabled:text-gray-400 disabled:cursor-not-allowed"
