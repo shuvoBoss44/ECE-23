@@ -22,7 +22,7 @@ const PrivateRoute = ({ children, isAuthenticated, setIsAuthenticated }) => {
     const checkAuth = async () => {
       try {
         const response = await fetch(
-          "https://ece-23-backend.vercel.app/api/users/me",
+          "https://ece-23-backend.onrender.com/api/users/me",
           {
             method: "GET",
             credentials: "include",
@@ -53,7 +53,7 @@ const Root = () => {
     const checkAuth = async () => {
       try {
         const response = await fetch(
-          "https://ece-23-backend.vercel.app/api/users/me",
+          "https://ece-23-backend.onrender.com/api/users/me",
           {
             method: "GET",
             credentials: "include",
