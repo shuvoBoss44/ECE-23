@@ -52,10 +52,13 @@ const Root = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/users/me", {
-          method: "GET",
-          credentials: "include",
-        });
+        const response = await fetch(
+          "https://ece-23-backend.vercel.app/api/users/me",
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
         setIsAuthenticated(response.ok);
       } catch (err) {
         console.error("Auth check failed:", err);
