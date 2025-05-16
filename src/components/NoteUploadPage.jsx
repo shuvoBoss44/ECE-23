@@ -175,7 +175,7 @@ const NoteUploadPage = () => {
                 value={semester}
                 onChange={e => {
                   setSemester(e.target.value);
-                  setCourseNo(""); // Reset course when semester changes
+                  setCourseNo("");
                 }}
                 required
                 className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition appearance-none cursor-pointer"
