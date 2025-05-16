@@ -5,6 +5,7 @@ import {
   FaInstagram,
   FaWhatsapp,
   FaArrowLeft,
+  FaFilePdf,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
@@ -12,13 +13,17 @@ import { useEffect, useState } from "react";
 import Background from "./Background";
 
 const Profile = ({
-  data,
   placeholderImage = "https://zeru.com/blog/wp-content/uploads/How-Do-You-Have-No-Profile-Picture-on-Facebook_25900",
 }) => {
   const { roll } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const student = data.find(item => item.roll === roll);
+  const [student, setStudent] = useState(null);
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notesLoading, setNotesLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notesError, setNotesError] = useState("");
 
   const { ref: inViewRef, inView } = useInView({
     triggerOnce: true,
@@ -27,12 +32,69 @@ const Profile = ({
   });
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
+  // Fetch user data by roll
   useEffect(() => {
+    const fetchUser = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await fetch(
+          `https://ece-23-backend.vercel.app/api/users/${roll}`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (!response.ok) {
+          throw new Error("User not found");
+        }
+        const data = await response.json();
+        setStudent(data);
+      } catch (err) {
+        console.error("Fetch user error:", err);
+        setError(err.message || "Failed to load user data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
     window.scrollTo(0, 0);
     if (history.scrollRestoration) {
       history.scrollRestoration = "manual";
     }
   }, [roll]);
+
+  // Fetch notes by userId
+  useEffect(() => {
+    if (!student?._id) return;
+
+    const fetchNotes = async () => {
+      setNotesLoading(true);
+      setNotesError("");
+      try {
+        const response = await fetch(
+          `https://ece-23-backend.vercel.app/api/notes/${student._id}?page=1&limit=10`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch notes");
+        }
+        const data = await response.json();
+        setNotes(data.notes || []);
+      } catch (err) {
+        console.error("Fetch notes error:", err);
+        setNotesError(err.message || "Failed to load notes");
+      } finally {
+        setNotesLoading(false);
+      }
+    };
+
+    fetchNotes();
+  }, [student?._id]);
 
   const handleImageLoad = () => {
     setTimeout(() => setIsImageLoaded(true), 300);
@@ -51,10 +113,23 @@ const Profile = ({
     }
   };
 
-  if (!student) {
+  if (loading) {
     return (
-      <div className="text-center text-red-500 text-lg font-semibold py-8">
-        Student not found!
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-white text-lg font-semibold">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !student) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center">
+        <div className="text-center text-red-500 text-lg font-semibold py-8">
+          {error || "Student not found!"}
+        </div>
       </div>
     );
   }
@@ -177,13 +252,69 @@ const Profile = ({
                     <span className="text-blue-400 font-semibold">School:</span>{" "}
                     {school || "Not provided"}
                   </p>
-                  <p className="flex items-center gap-2">
+                  <p className="flex items-center gap-3">
                     <span className="text-blue-400 font-semibold">
                       College:
                     </span>{" "}
                     {college || "Not provided"}
                   </p>
                 </div>
+              </motion.div>
+
+              {/* Shared Notes Section */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 0.5 }}
+                className="bg-gray-800/70 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/20 transition-shadow duration-300"
+              >
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                  Shared Notes
+                </h2>
+                {notesLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : notesError ? (
+                  <p className="text-red-400 text-center text-sm sm:text-base">
+                    {notesError}
+                  </p>
+                ) : notes.length > 0 ? (
+                  <div className="space-y-3">
+                    {notes.map(note => (
+                      <motion.div
+                        key={note._id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg hover:bg-gray-600/50 transition"
+                      >
+                        <div className="flex-1">
+                          <p className="text-white font-semibold text-sm sm:text-base">
+                            {note.title}
+                          </p>
+                          <p className="text-gray-300 text-xs sm:text-sm">
+                            Semester: {note.semester} | Course: {note.courseNo}
+                          </p>
+                        </div>
+                        <motion.a
+                          href={note.pdf}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition"
+                          whileHover={{ scale: 1.2, rotate: 10 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <FaFilePdf className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                        </motion.a>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-center text-sm sm:text-base">
+                    No notes shared yet.
+                  </p>
+                )}
               </motion.div>
 
               {/* Social Media Links */}
