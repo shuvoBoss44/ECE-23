@@ -47,7 +47,7 @@ const NoteUploadPage = () => {
 
     try {
       const response = await fetch(
-        "https://ece-23-backend.vercel.app/api/notes",
+        "https://ece-23-backend.onrender.com/api/notes",
         {
           method: "POST",
           headers: {

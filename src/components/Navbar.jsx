@@ -8,7 +8,7 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
 
   const handleLogout = async () => {
     try {
-      await fetch("https://ece-23-backend.vercel.app/api/users/logout", {
+      await fetch("https://ece-23-backend.onrender.com/api/users/logout", {
         method: "POST",
         credentials: "include",
       });

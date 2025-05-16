@@ -19,7 +19,7 @@ const Announcements = () => {
     const fetchCurrentUser = async () => {
       try {
         const response = await fetch(
-          "https://ece-23-backend.vercel.app/api/users/me",
+          "https://ece-23-backend.onrender.com/api/users/me",
           {
             method: "GET",
             credentials: "include",
@@ -46,7 +46,7 @@ const Announcements = () => {
       setError("");
       try {
         const response = await fetch(
-          `https://ece-23-backend.vercel.app/api/announcements?page=${page}&limit=10`,
+          `https://ece-23-backend.onrender.com/api/announcements?page=${page}&limit=10`,
           { method: "GET", credentials: "include" }
         );
         if (!response.ok) {
@@ -76,8 +76,8 @@ const Announcements = () => {
     try {
       const method = editingId ? "PUT" : "POST";
       const url = editingId
-        ? `https://ece-23-backend.vercel.app/api/announcements/${editingId}`
-        : "https://ece-23-backend.vercel.app/api/announcements";
+        ? `https://ece-23-backend.onrender.com/api/announcements/${editingId}`
+        : "https://ece-23-backend.onrender.com/api/announcements";
       const response = await fetch(url, {
         method,
         credentials: "include",
@@ -137,7 +137,7 @@ const Announcements = () => {
     }
     try {
       const response = await fetch(
-        `https://ece-23-backend.vercel.app/api/announcements/${id}`,
+        `https://ece-23-backend.onrender.com/api/announcements/${id}`,
         {
           method: "DELETE",
           credentials: "include",

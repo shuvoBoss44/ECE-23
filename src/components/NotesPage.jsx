@@ -39,7 +39,7 @@ const NotesPage = () => {
     const fetchCurrentUser = async () => {
       try {
         const response = await fetch(
-          "https://ece-23-backend.vercel.app/api/users/me",
+          "https://ece-23-backend.onrender.com/api/users/me",
           {
             method: "GET",
             credentials: "include",
@@ -77,7 +77,7 @@ const NotesPage = () => {
           courseNo: courseCode,
         });
         const response = await fetch(
-          `https://ece-23-backend.vercel.app/api/notes?${queryParams}`,
+          `https://ece-23-backend.onrender.com/api/notes?${queryParams}`,
           {
             method: "GET",
             credentials: "include",
@@ -111,7 +111,7 @@ const NotesPage = () => {
       setSuccess("");
       try {
         const response = await fetch(
-          `https://ece-23-backend.vercel.app/api/notes/${note._id}`,
+          `https://ece-23-backend.onrender.com/api/notes/${note._id}`,
           {
             method: "DELETE",
             credentials: "include",

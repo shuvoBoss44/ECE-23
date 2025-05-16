@@ -39,7 +39,7 @@ const Profile = ({
       setError("");
       try {
         const response = await fetch(
-          `https://ece-23-backend.vercel.app/api/users/${roll}`,
+          `https://ece-23-backend.onrender.com/api/users/${roll}`,
           {
             method: "GET",
             credentials: "include",
@@ -74,7 +74,7 @@ const Profile = ({
       setNotesError("");
       try {
         const response = await fetch(
-          `https://ece-23-backend.vercel.app/api/notes/${student._id}?page=1&limit=10`,
+          `https://ece-23-backend.onrender.com/api/notes/${student._id}?page=1&limit=10`,
           {
             method: "GET",
             credentials: "include",
