@@ -280,7 +280,7 @@ const Profile = ({
                     {notesError}
                   </p>
                 ) : notes.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
                     {notes.map(note => (
                       <motion.div
                         key={note._id}
@@ -397,7 +397,7 @@ const Profile = ({
               </a>
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              All rights reserved by ECE-23
+              All rights Windows reserved by ECE-23
             </p>
           </div>
         </footer>

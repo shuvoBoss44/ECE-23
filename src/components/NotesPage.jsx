@@ -33,6 +33,7 @@ const NotesPage = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(""); // New state for search query
 
   // Fetch current user information
   useEffect(() => {
@@ -150,6 +151,11 @@ const NotesPage = () => {
     return url;
   };
 
+  // Filter notes based on search query
+  const filteredNotes = notes.filter(note =>
+    note.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <Background />
@@ -203,6 +209,7 @@ const NotesPage = () => {
                       setNotes([]);
                       setViewedNoteId(null);
                       setPage(1);
+                      setSearchQuery(""); // Reset search query on semester change
                     }}
                     className={`p-3 rounded-lg text-sm sm:text-base ${
                       selectedSemester === sem.name
@@ -240,6 +247,7 @@ const NotesPage = () => {
                           setNotes([]);
                           setViewedNoteId(null);
                           setPage(1);
+                          setSearchQuery(""); // Reset search query on course change
                         }}
                         className={`p-3 rounded-lg text-sm sm:text-base ${
                           selectedCourse === course
@@ -265,6 +273,22 @@ const NotesPage = () => {
                 <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-4">
                   Notes for {selectedCourse}
                 </h2>
+                {/* Search Bar */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  className="mb-4"
+                >
+                  <input
+                    type="text"
+                    placeholder="Search notes by title..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full p-3 rounded-lg bg-gray-800/50 text-gray-200 placeholder-gray-400 border border-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm sm:text-base"
+                    aria-label="Search notes by title"
+                  />
+                </motion.div>
                 {loading ? (
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -276,13 +300,13 @@ const NotesPage = () => {
                       Loading notes...
                     </p>
                   </motion.div>
-                ) : notes.length === 0 ? (
+                ) : filteredNotes.length === 0 ? (
                   <p className="text-gray-400 text-sm sm:text-base">
-                    No notes available for this course.
+                    No notes match your search or available for this course.
                   </p>
                 ) : (
                   <div className="space-y-4">
-                    {notes.map(note => (
+                    {filteredNotes.map(note => (
                       <motion.div
                         key={note._id}
                         initial={{ opacity: 0, y: 20 }}
