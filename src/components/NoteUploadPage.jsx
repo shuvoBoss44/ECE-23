@@ -1,25 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { semesters } from "./NotesPage";
 import Background from "./Background";
 import { motion } from "framer-motion";
-
-// Define semesters data directly
-const semesters = [
-  {
-    name: "1st Year Odd",
-    courses: [
-      "ECE 1101 - Circuits and Systems - I",
-      "ECE 1102 - Circuits and Systems - I Sessional",
-      "ECE 1103 - Computer Programming",
-      "ECE 1104 - Computer Programming Sessional",
-      "Math 1117 - Calculus and Co-ordinate Geometry",
-      "Phy 1117 - Optics and Modern Physics",
-      "Phy 1118 - Optics and Modern Physics Sessional",
-      "Hum 1117 - Technical English",
-      "Hum 1118 - Technical English Sessional",
-      "ECE 1100 - Introduction to Computer System",
-    ],
-  },
-];
 
 const NoteUploadPage = () => {
   const [title, setTitle] = useState("");
@@ -30,40 +12,8 @@ const NoteUploadPage = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Debug state changes
-  useEffect(() => {
-    console.log("Semesters:", semesters);
-    console.log("Semester:", semester, "CourseNo:", courseNo);
-  }, [semester, courseNo]);
-
   const getCourseCode = fullCourseName => {
     return fullCourseName.split(" - ")[0].trim();
-  };
-
-  const fetchWithBackoff = async (url, options, retries = 5, delay = 1000) => {
-    try {
-      const response = await fetch(url, options);
-      if (response.status === 429 && retries > 0) {
-        const retryAfter = response.headers.get("Retry-After") || delay / 1000;
-        console.log(`Rate limited. Retrying after ${retryAfter}s`);
-        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-        return fetchWithBackoff(url, options, retries - 1, delay * 2);
-      }
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || `HTTP error! Status: ${response.status}`
-        );
-      }
-      return response.json();
-    } catch (error) {
-      if (retries > 0) {
-        console.log(`Error. Retrying after ${delay}ms`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return fetchWithBackoff(url, options, retries - 1, delay * 2);
-      }
-      throw error;
-    }
   };
 
   const handleSubmit = async e => {
@@ -96,25 +46,24 @@ const NoteUploadPage = () => {
     };
 
     try {
-      const token =
-        localStorage.getItem("token") ||
-        document.cookie.split("token=")[1]?.split(";")[0];
-      if (!token) {
-        throw new Error("No authentication token found. Please log in.");
-      }
-
-      const response = await fetchWithBackoff(
+      const response = await fetch(
         "https://ece-23-backend.onrender.com/api/notes",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(noteData),
           credentials: "include",
         }
       );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `HTTP error! Status: ${response.status}`
+        );
+      }
 
       setSuccess("Note uploaded successfully!");
       setTitle("");
@@ -128,10 +77,6 @@ const NoteUploadPage = () => {
       setLoading(false);
     }
   };
-
-  // Get courses for the selected semester
-  const selectedSemester = semesters.find(sem => sem.name === semester);
-  const courses = selectedSemester?.courses || [];
 
   return (
     <>
@@ -194,10 +139,10 @@ const NoteUploadPage = () => {
                 value={semester}
                 onChange={e => {
                   setSemester(e.target.value);
-                  setCourseNo(""); // Reset course when semester changes
+                  setCourseNo("");
                 }}
                 required
-                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition appearance-none cursor-pointer"
+                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
               >
                 <option value="" disabled className="bg-gray-800">
                   Select a semester
@@ -224,21 +169,25 @@ const NoteUploadPage = () => {
                 id="courseNo"
                 value={courseNo}
                 onChange={e => setCourseNo(e.target.value)}
-                onClick={() => console.log("Course dropdown clicked")}
                 required
-                disabled={!semester || courses.length === 0}
-                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition appearance-none cursor-pointer disabled:bg-gray-700/50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                disabled={!semester}
+                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition disabled:bg-gray-700/50 disabled:text-gray-400"
               >
                 <option value="" disabled className="bg-gray-800">
-                  {semester && courses.length === 0
-                    ? "No courses available"
-                    : "Select a course"}
+                  Select a course
                 </option>
-                {courses.map(course => (
-                  <option key={course} value={course} className="bg-gray-800">
-                    {course}
-                  </option>
-                ))}
+                {semester &&
+                  semesters
+                    .find(sem => sem.name === semester)
+                    ?.courses.map(course => (
+                      <option
+                        key={course}
+                        value={course}
+                        className="bg-gray-800"
+                      >
+                        {course}
+                      </option>
+                    ))}
               </select>
             </div>
             <div>
