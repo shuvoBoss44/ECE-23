@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { semesters } from "./NotesPage";
 import Background from "./Background";
 import { motion } from "framer-motion";
@@ -12,8 +12,46 @@ const NoteUploadPage = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Debug state changes
+  useEffect(() => {
+    console.log("Semester:", semester, "CourseNo:", courseNo);
+  }, [semester, courseNo]);
+
   const getCourseCode = fullCourseName => {
     return fullCourseName.split(" - ")[0].trim();
+  };
+
+  const fetchWithBackoff = async (url, options, retries = 5, delay = 1000) => {
+    try {
+      const response = await fetch(url, options);
+      if (response.status === 429 && retries > 0) {
+        const retryAfter = response.headers.get("Retry-After") || delay / 1000;
+        console.log(`Rate limited. Retrying after ${retryAfter}s`);
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        return fetchWithBackoff(url, options, retries - 1, delay * 2);
+      }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `HTTP error! Status: ${response.status}`
+        );
+      }
+      return response.json();
+    } catch (error) {
+      if (retries > 0) {
+        console.log(`Error. Retrying after ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchWithBackoff(url, options, retries - 1, delay * 2);
+      }
+      throw error;
+    }
+  };
+
+  const getCookie = name => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return null;
   };
 
   const handleSubmit = async e => {
@@ -22,7 +60,11 @@ const NoteUploadPage = () => {
     setSuccess("");
     setLoading(true);
 
-    if (!title || !semester || !courseNo || !pdfUrl) {
+    // Sanitize inputs
+    const trimmedTitle = title.trim();
+    const trimmedPdfUrl = pdfUrl.trim();
+
+    if (!trimmedTitle || !semester || !courseNo || !trimmedPdfUrl) {
       setError("All fields are required");
       setLoading(false);
       return;
@@ -30,7 +72,7 @@ const NoteUploadPage = () => {
 
     const googleDriveRegex =
       /^https:\/\/(drive\.google\.com\/file\/d\/|docs\.google\.com\/.*id=)[a-zA-Z0-9_-]+/;
-    if (!googleDriveRegex.test(pdfUrl)) {
+    if (!googleDriveRegex.test(trimmedPdfUrl)) {
       setError("Please provide a valid Google Drive URL");
       setLoading(false);
       return;
@@ -39,31 +81,30 @@ const NoteUploadPage = () => {
     const courseCode = getCourseCode(courseNo);
 
     const noteData = {
-      title,
+      title: trimmedTitle,
       semester,
       courseNo: courseCode,
-      pdf: pdfUrl,
+      pdf: trimmedPdfUrl,
     };
 
     try {
-      const response = await fetch(
+      const token = getCookie("token");
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetchWithBackoff(
         "https://ece-23-backend.onrender.com/api/notes",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(noteData),
           credentials: "include",
         }
       );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || `HTTP error! Status: ${response.status}`
-        );
-      }
 
       setSuccess("Note uploaded successfully!");
       setTitle("");
@@ -72,11 +113,21 @@ const NoteUploadPage = () => {
       setPdfUrl("");
     } catch (err) {
       console.error("Upload error:", err);
-      setError(err.message || "Failed to upload note. Please try again.");
+      if (err.message.includes("token")) {
+        setError("Authentication failed. Please log in again.");
+      } else if (err.message.includes("429")) {
+        setError("Too many requests. Please try again later.");
+      } else {
+        setError("Failed to upload note. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  // Get courses for the selected semester
+  const selectedSemester = semesters.find(sem => sem.name === semester);
+  const courses = selectedSemester?.courses || [];
 
   return (
     <>
@@ -142,7 +193,7 @@ const NoteUploadPage = () => {
                   setCourseNo("");
                 }}
                 required
-                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition appearance-none cursor-pointer"
               >
                 <option value="" disabled className="bg-gray-800">
                   Select a semester
@@ -170,24 +221,19 @@ const NoteUploadPage = () => {
                 value={courseNo}
                 onChange={e => setCourseNo(e.target.value)}
                 required
-                disabled={!semester}
-                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition disabled:bg-gray-700/50 disabled:text-gray-400"
+                disabled={!semester || courses.length === 0}
+                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition appearance-none cursor-pointer disabled:bg-gray-700/50 disabled:text-gray-400 disabled:cursor-not-allowed"
               >
                 <option value="" disabled className="bg-gray-800">
-                  Select a course
+                  {semester && courses.length === 0
+                    ? "No courses available"
+                    : "Select a course"}
                 </option>
-                {semester &&
-                  semesters
-                    .find(sem => sem.name === semester)
-                    ?.courses.map(course => (
-                      <option
-                        key={course}
-                        value={course}
-                        className="bg-gray-800"
-                      >
-                        {course}
-                      </option>
-                    ))}
+                {courses.map(course => (
+                  <option key={course} value={course} className="bg-gray-800">
+                    {course}
+                  </option>
+                ))}
               </select>
             </div>
             <div>

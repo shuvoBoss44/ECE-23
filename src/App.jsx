@@ -37,7 +37,7 @@ const App = () => {
       setError("");
       try {
         const response = await fetch(
-          "https://ece-23-backend.vercel.app/api/users",
+          "https://ece-23-backend.onrender.com/api/users",
           {
             method: "GET",
             credentials: "include",
