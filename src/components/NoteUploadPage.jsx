@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { semesters } from "./NotesPage";
 import Background from "./Background";
 import { motion } from "framer-motion";
@@ -12,8 +12,39 @@ const NoteUploadPage = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Debug state changes
+  useEffect(() => {
+    console.log("Semester:", semester, "CourseNo:", courseNo);
+  }, [semester, courseNo]);
+
   const getCourseCode = fullCourseName => {
     return fullCourseName.split(" - ")[0].trim();
+  };
+
+  const fetchWithBackoff = async (url, options, retries = 5, delay = 1000) => {
+    try {
+      const response = await fetch(url, options);
+      if (response.status === 429 && retries > 0) {
+        const retryAfter = response.headers.get("Retry-After") || delay / 1000;
+        console.log(`Rate limited. Retrying after ${retryAfter}s`);
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        return fetchWithBackoff(url, options, retries - 1, delay * 2);
+      }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `HTTP error! Status: ${response.status}`
+        );
+      }
+      return response.json();
+    } catch (error) {
+      if (retries > 0) {
+        console.log(`Error. Retrying after ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchWithBackoff(url, options, retries - 1, delay * 2);
+      }
+      throw error;
+    }
   };
 
   const handleSubmit = async e => {
@@ -46,24 +77,25 @@ const NoteUploadPage = () => {
     };
 
     try {
-      const response = await fetch(
+      const token =
+        localStorage.getItem("token") ||
+        document.cookie.split("token=")[1]?.split(";")[0];
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetchWithBackoff(
         "https://ece-23-backend.onrender.com/api/notes",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(noteData),
           credentials: "include",
         }
       );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || `HTTP error! Status: ${response.status}`
-        );
-      }
 
       setSuccess("Note uploaded successfully!");
       setTitle("");
@@ -78,6 +110,10 @@ const NoteUploadPage = () => {
     }
   };
 
+  // Get courses for the selected semester
+  const selectedSemester = semesters.find(sem => sem.name === semester);
+  const courses = selectedSemester?.courses || [];
+
   return (
     <>
       <Background />
@@ -88,7 +124,7 @@ const NoteUploadPage = () => {
           transition={{ duration: 0.6 }}
           className="bg-gray-900/80 backdrop-blur-lg rounded-xl max-w-lg w-full p-4 sm:p-6 border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-shadow z-10 mx-auto mt-8"
         >
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6 text-center">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-transparent bg-clip-text(bg-gradient-to-r from-blue-400 to-purple-400 mb-6 text-center">
             Upload a Note
           </h2>
           {error && (
@@ -139,10 +175,10 @@ const NoteUploadPage = () => {
                 value={semester}
                 onChange={e => {
                   setSemester(e.target.value);
-                  setCourseNo("");
+                  setCourseNo(""); // Reset course when semester changes
                 }}
                 required
-                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition appearance-none cursor-pointer"
               >
                 <option value="" disabled className="bg-gray-800">
                   Select a semester
@@ -170,24 +206,19 @@ const NoteUploadPage = () => {
                 value={courseNo}
                 onChange={e => setCourseNo(e.target.value)}
                 required
-                disabled={!semester}
-                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition disabled:bg-gray-700/50 disabled:text-gray-400"
+                disabled={!semester || courses.length === 0}
+                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition appearance-none cursor-pointer disabled:bg-gray-700/50 disabled:text-gray-400 disabled:cursor-not-allowed"
               >
                 <option value="" disabled className="bg-gray-800">
-                  Select a course
+                  {semester && courses.length === 0
+                    ? "No courses available"
+                    : "Select a course"}
                 </option>
-                {semester &&
-                  semesters
-                    .find(sem => sem.name === semester)
-                    ?.courses.map(course => (
-                      <option
-                        key={course}
-                        value={course}
-                        className="bg-gray-800"
-                      >
-                        {course}
-                      </option>
-                    ))}
+                {courses.map(course => (
+                  <option key={course} value={course} className="bg-gray-800">
+                    {course}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
