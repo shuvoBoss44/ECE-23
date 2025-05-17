@@ -99,11 +99,17 @@ const Profile = ({
   const handleImageLoad = () => {
     setTimeout(() => setIsImageLoaded(true), 300);
   };
-  const getGoogleDrivePreviewUrl = url => {
+
+  const getGoogleDriveFileUrl = url => {
+    if (!url || typeof url !== "string") {
+      console.error("Invalid or missing file URL:", url);
+      return null;
+    }
     const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (!fileIdMatch) return url;
-    const fileId = fileIdMatch[1];
-    return `https://drive.google.com/file/d/${fileId}/preview`;
+    if (fileIdMatch) {
+      return `https://drive.google.com/file/d/${fileIdMatch[1]}/view`;
+    }
+    return url; // Return original URL for non-Google Drive links
   };
 
   const handleImageError = e => {
@@ -295,22 +301,23 @@ const Profile = ({
                             {note.title}
                           </p>
                           <p className="text-gray-300 text-xs sm:text-sm">
-                            Semester: {note.semester} | Course: {note.courseNo}
+                            Semester: {note.semester || "N/A"} | Course:{" "}
+                            {note.courseNo || "N/A"}
                           </p>
                         </div>
                         <motion.a
-                          href={getGoogleDrivePreviewUrl(note.file)}
+                          href={getGoogleDriveFileUrl(note.file) || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition relative group"
                           whileHover={{ scale: 1.2, rotate: 10 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={e => {
-                            const url = getGoogleDrivePreviewUrl(note.file);
-                            if (!url || !url.includes("drive.google.com")) {
+                            const url = getGoogleDriveFileUrl(note.file);
+                            if (!url) {
                               e.preventDefault();
                               console.error(
-                                "Invalid Google Drive URL for note:",
+                                "Invalid or missing file URL for note:",
                                 note._id,
                                 note.file
                               );
@@ -319,12 +326,12 @@ const Profile = ({
                               );
                             }
                           }}
-                          aria-label={`Preview ${note.title}`}
-                          title="Preview PDF"
+                          aria-label={`Open ${note.title} PDF`}
+                          title="Open PDF"
                         >
                           <FaFilePdf className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                           <span className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 -top-8 left-1/2 transform -translate-x-1/2">
-                            Preview PDF
+                            Open PDF
                           </span>
                         </motion.a>
                       </motion.div>
@@ -354,7 +361,7 @@ const Profile = ({
                         href={facebook}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 sm W:p-3 bg-blue-600 rounded-full hover:bg-blue-700 transition"
+                        className="p-2 sm:p-3 bg-blue-600 rounded-full hover:bg-blue-700 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
                       >
