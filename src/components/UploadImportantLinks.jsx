@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Background from "./Background";
 import { motion } from "framer-motion";
 import { Navigate } from "react-router-dom";
-import { useUser } from "./RootWithRouter";
 
 const UploadImportantLinks = () => {
   const [title, setTitle] = useState("");
@@ -11,9 +10,39 @@ const UploadImportantLinks = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const { user } = useUser();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAuthorized, setIsAuthorized] = useState(null);
 
-  const handleSubmit = async (e, retries = 3, delay = 1000) => {
+  // Fetch current user information
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch(
+          "https://ece-23-backend.onrender.com/api/users/me",
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUser(userData);
+          setIsAuthorized(userData.canAnnounce);
+        } else {
+          setCurrentUser(null);
+          setIsAuthorized(false);
+        }
+      } catch (err) {
+        setError("Failed to fetch user data: " + err.message);
+        setCurrentUser(null);
+        setIsAuthorized(false);
+        console.error("User fetch error:", err);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
+
+  const handleSubmit = async e => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -53,12 +82,6 @@ const UploadImportantLinks = () => {
         }
       );
 
-      if (response.status === 429 && retries > 0) {
-        console.warn(`Rate limit hit, retrying after ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return handleSubmit(e, retries - 1, delay * 2);
-      }
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
@@ -80,11 +103,11 @@ const UploadImportantLinks = () => {
     }
   };
 
-  if (!user) {
+  if (isAuthorized === null) {
     return null; // Loading state while fetching user data
   }
 
-  if (!user.canAnnounce) {
+  if (!isAuthorized) {
     return <Navigate to="/important-links" />;
   }
 

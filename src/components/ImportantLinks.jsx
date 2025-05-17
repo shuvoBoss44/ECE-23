@@ -2,19 +2,43 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import Background from "./Background";
-import { useUser } from "./RootWithRouter";
 
 const ImportantLinks = () => {
   const [importantLinks, setImportantLinks] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const { user } = useUser();
+
+  // Fetch current user to check canAnnounce status
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch(
+          "https://ece-23-backend.onrender.com/api/users/me",
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUser(userData);
+        } else {
+          setCurrentUser(null);
+        }
+      } catch (err) {
+        setError("Failed to fetch user data: " + err.message);
+        setCurrentUser(null);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   // Fetch important links
   useEffect(() => {
-    const fetchImportantLinks = async (retries = 3, delay = 1000) => {
+    const fetchImportantLinks = async () => {
       setLoading(true);
       setError("");
       try {
@@ -30,11 +54,6 @@ const ImportantLinks = () => {
             credentials: "include",
           }
         );
-        if (response.status === 429 && retries > 0) {
-          console.warn(`Rate limit hit, retrying after ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return fetchImportantLinks(retries - 1, delay * 2);
-        }
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
@@ -65,10 +84,6 @@ const ImportantLinks = () => {
             credentials: "include",
           }
         );
-        if (response.status === 429) {
-          setError("Rate limit exceeded, please try again later.");
-          return;
-        }
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || "Failed to delete link");
@@ -114,7 +129,7 @@ const ImportantLinks = () => {
               <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center">
                 Important Links
               </h2>
-              {user?.canAnnounce && (
+              {currentUser?.canAnnounce && (
                 <Link to="/important-links/upload">
                   <motion.button
                     whileHover={{ scale: 1.03 }}
@@ -184,7 +199,7 @@ const ImportantLinks = () => {
                         </p>
                       )}
                     </div>
-                    {user?._id === link.userId?._id && (
+                    {currentUser?._id === link.userId?._id && (
                       <motion.button
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.95 }}
