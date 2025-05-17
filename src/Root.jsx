@@ -15,6 +15,8 @@ import Login from "./components/Login";
 import NoteUploadPage from "./components/NoteUploadPage";
 import ChangePassword from "./components/ChangePassword";
 import Announcements from "./components/Announcements";
+import ImportantLinks from "./components/ImportantLinks";
+import UploadImportantLinks from "./components/UploadImportantLinks";
 
 // PrivateRoute component to protect routes requiring authentication
 const PrivateRoute = ({ children, isAuthenticated, setIsAuthenticated }) => {
@@ -87,6 +89,18 @@ const Root = () => {
               setIsAuthenticated={setIsAuthenticated}
             >
               <NoteUploadPage />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/important-links" element={<ImportantLinks />} />
+        <Route
+          path="/important-links/upload"
+          element={
+            <PrivateRoute
+              isAuthenticated={isAuthenticated}
+              setIsAuthenticated={setIsAuthenticated}
+            >
+              <UploadImportantLinks />
             </PrivateRoute>
           }
         />

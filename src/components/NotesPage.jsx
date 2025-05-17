@@ -38,7 +38,6 @@ export const semesters = [
 
 const NotesPage = () => {
   const [notes, setNotes] = useState([]);
-  const [importantLinks, setImportantLinks] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
   const [viewedNoteId, setViewedNoteId] = useState(null);
@@ -47,11 +46,8 @@ const NotesPage = () => {
   const [success, setSuccess] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [linkPage, setLinkPage] = useState(1);
-  const [totalLinkPages, setTotalLinkPages] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [linkSearchQuery, setLinkSearchQuery] = useState("");
 
   // Fetch current user information
   useEffect(() => {
@@ -94,6 +90,7 @@ const NotesPage = () => {
           limit: 10,
           semester: selectedSemester,
           courseNo: courseCode,
+          isImportantLink: false,
         });
         const response = await fetch(
           `https://ece-23-backend.onrender.com/api/notes?${queryParams}`,
@@ -118,42 +115,6 @@ const NotesPage = () => {
     };
     fetchNotes();
   }, [page, selectedSemester, selectedCourse]);
-
-  // Fetch important links
-  useEffect(() => {
-    const fetchImportantLinks = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const queryParams = new URLSearchParams({
-          page: linkPage,
-          limit: 10,
-        });
-        const response = await fetch(
-          `https://ece-23-backend.onrender.com/api/important-links?${queryParams}`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.message || "Failed to fetch important links"
-          );
-        }
-        const { importantLinks, total, pages } = await response.json();
-        setImportantLinks(importantLinks || []);
-        setTotalLinkPages(pages || 1);
-        console.log("Fetched Important Links:", importantLinks);
-      } catch (err) {
-        setError("Failed to load important links: " + err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchImportantLinks();
-  }, [linkPage]);
 
   const handleDeleteNote = async note => {
     if (
@@ -187,39 +148,6 @@ const NotesPage = () => {
     }
   };
 
-  const handleDeleteLink = async link => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete the important link "${link.title}"?`
-      )
-    ) {
-      setLoading(true);
-      setError("");
-      setSuccess("");
-      try {
-        const response = await fetch(
-          `https://ece-23-backend.onrender.com/api/important-links/${link._id}`,
-          {
-            method: "DELETE",
-            credentials: "include",
-          }
-        );
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.message || "Failed to delete important link"
-          );
-        }
-        setImportantLinks(importantLinks.filter(l => l._id !== link._id));
-        setSuccess("Important link deleted successfully!");
-      } catch (err) {
-        setError("Failed to delete important link: " + err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
   // Convert Google Drive URL to embeddable preview URL
   const getGoogleDrivePreviewUrl = (url, fileType) => {
     const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -241,23 +169,20 @@ const NotesPage = () => {
     return url;
   };
 
-  // Filter notes and links based on search queries
+  // Filter notes based on search query
   const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const filteredLinks = importantLinks.filter(link =>
-    link.title.toLowerCase().includes(linkSearchQuery.toLowerCase())
   );
 
   return (
     <>
       <Background />
-      <div className="min-h-screen bg-black/50 backdrop-blur-sm flex flex-col relative">
+      <div className="min-h-screen bg-black/50 backdrop-blur-sm flex flex-col pl-0 sm:pl-64 p-4 sm:p-6 relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-grow p-4 sm:p-6 lg:p-8 relative z-10"
+          className="flex-grow relative z-10"
         >
           <div className="max-w-6xl mx-auto w-full">
             {/* Error and Success Messages */}
@@ -554,142 +479,6 @@ const NotesPage = () => {
                 )}
               </motion.div>
             )}
-
-            {/* Important Links Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="bg-gray-900/80 backdrop-blur-lg rounded-xl p-4 sm:p-6 mb-6 border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-shadow"
-            >
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-4">
-                Important Links
-              </h2>
-              {/* Search Bar for Links */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.4 }}
-                className="mb-4"
-              >
-                <input
-                  type="text"
-                  placeholder="Search links by title..."
-                  value={linkSearchQuery}
-                  onChange={e => setLinkSearchQuery(e.target.value)}
-                  className="w-full p-3 rounded-lg bg-gray-800/50 text-gray-200 placeholder-gray-400 border border-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm sm:text-base"
-                  aria-label="Search links by title"
-                />
-              </motion.div>
-              {loading ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex justify-center mb-4"
-                >
-                  <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="ml-2 text-blue-200 text-sm sm:text-base">
-                    Loading important links...
-                  </p>
-                </motion.div>
-              ) : filteredLinks.length === 0 ? (
-                <p className="text-gray-400 text-sm sm:text-base">
-                  No important links match your search or are available.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {filteredLinks.map(link => (
-                    <motion.div
-                      key={link._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4 }}
-                      className="bg-gray-800/50 rounded-lg p-4 hover:bg-gray-700/60 transition-all duration-300 border border-blue-500/20"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                        <div>
-                          <h3 className="text-base sm:text-lg font-semibold text-white">
-                            {link.title}
-                          </h3>
-                          <p className="text-gray-400 text-xs sm:text-sm">
-                            Uploaded by:{" "}
-                            <Link
-                              to={`/profile/${link.userId?.roll || "unknown"}`}
-                              className="text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                              {link.userId?.name || "Unknown"} (
-                              {link.userId?.roll || "N/A"})
-                            </Link>
-                          </p>
-                          <p className="text-gray-400 text-xs sm:text-sm">
-                            Uploaded on:{" "}
-                            {new Date(link.createdAt).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <motion.a
-                            href={getGoogleDriveDownloadUrl(link.link)}
-                            download
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="p-2 bg-green-600 rounded-lg text-white text-xs sm:text-sm hover:bg-green-700 transition-all"
-                            aria-label={`Download ${link.title}`}
-                          >
-                            Download
-                          </motion.a>
-                          {currentUser &&
-                          currentUser._id === link.userId?._id ? (
-                            <motion.button
-                              whileHover={{ scale: 1.03 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleDeleteLink(link)}
-                              className="p-2 bg-red-600 rounded-lg text-white text-xs sm:text-sm hover:bg-red-700 transition-all"
-                              aria-label={`Delete ${link.title}`}
-                            >
-                              Delete
-                            </motion.button>
-                          ) : (
-                            !currentUser && (
-                              <p className="text-xs sm:text-sm text-gray-400"></p>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-              {/* Pagination for Links */}
-              {totalLinkPages > 1 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setLinkPage(prev => Math.max(prev - 1, 1))}
-                    disabled={linkPage === 1}
-                    className="p-2 bg-blue-600 rounded-lg text-white text-sm disabled:opacity-50 disabled:hover:bg-blue-600 transition-all"
-                    aria-label="Previous page"
-                  >
-                    Previous
-                  </motion.button>
-                  <p className="text-gray-200 text-sm">
-                    Page {linkPage} of {totalLinkPages}
-                  </p>
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() =>
-                      setLinkPage(prev => Math.min(prev + 1, totalLinkPages))
-                    }
-                    disabled={linkPage === totalLinkPages}
-                    className="p-2 bg-blue-600 rounded-lg text-white text-sm disabled:opacity-50 disabled:hover:bg-blue-600 transition-all"
-                    aria-label="Next page"
-                  >
-                    Next
-                  </motion.button>
-                </div>
-              )}
-            </motion.div>
           </div>
         </motion.div>
 
