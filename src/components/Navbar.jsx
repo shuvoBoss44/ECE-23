@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   FaHome,
@@ -15,12 +15,13 @@ import {
 const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const location = useLocation();
+  const [isLoadingUser, setIsLoadingUser] = useState(true); // Added for loading state
 
   // Fetch current user to check canAnnounce status
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
+        setIsLoadingUser(true);
         const response = await fetch(
           "https://ece-23-backend.onrender.com/api/users/me",
           {
@@ -37,6 +38,8 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
       } catch (err) {
         setCurrentUser(null);
         console.error("User fetch error:", err);
+      } finally {
+        setIsLoadingUser(false);
       }
     };
     fetchCurrentUser();
@@ -60,8 +63,12 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  if (isAuthenticated === null) {
-    return null;
+  if (isAuthenticated === null || isLoadingUser) {
+    return (
+      <div className="fixed top-4 left-4 z-50">
+        <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    ); // Show loading spinner while fetching auth or user
   }
 
   const navLinks = [
