@@ -148,22 +148,6 @@ const Profile = ({
           transition={{ duration: 0.6 }}
           className="flex-grow p-3 sm:p-6 md:p-8 pt-3"
         >
-          {/* Back Button at Top */}
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2, duration: 0.4 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleBack}
-            className="mb-4 p-2 sm:p-3 bg-blue-500/80 rounded-full hover:bg-blue-600 transition-all backdrop-blur-sm flex items-center gap-2"
-          >
-            <FaArrowLeft className="text-white w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-white text-xs sm:text-sm font-medium">
-              Back
-            </span>
-          </motion.button>
-
           <div className="max-w-4xl mx-auto bg-gray-900/85 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-blue-500/20">
             {/* Cover Photo */}
             <div className="relative h-48 sm:h-60 md:h-72 bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500">
