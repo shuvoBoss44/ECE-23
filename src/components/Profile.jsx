@@ -368,8 +368,7 @@ const Profile = ({
                       <motion.a
                         href={instagram}
                         target="_blank"
-                        rel="noopener noreferr
-er"
+                        rel="noopener noreferrer"
                         className="p-2 sm:p-3 bg-pink-600 rounded-full hover:bg-pink-700 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
