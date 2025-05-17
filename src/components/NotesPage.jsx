@@ -67,7 +67,7 @@ const NotesPage = () => {
           console.log("Current User:", userData);
         } else {
           setCurrentUser(null);
-          console.log("No user logged in or unauthorized");
+          console.log("No user logged in or unauthorized:", response.status);
         }
       } catch (err) {
         setError("Failed to fetch user data: " + err.message);
@@ -81,7 +81,10 @@ const NotesPage = () => {
   // Fetch notes from backend with filters
   useEffect(() => {
     const fetchNotes = async () => {
-      if (!selectedSemester || !selectedCourse) return;
+      if (!selectedSemester || !selectedCourse) {
+        console.log("Skipping fetch: Semester or Course not selected");
+        return;
+      }
       setLoading(true);
       setError("");
       try {
@@ -91,7 +94,7 @@ const NotesPage = () => {
           limit: 10,
           semester: selectedSemester,
           courseNo: courseCode,
-          isImportantLink: false,
+          isImportantLink: "false",
         });
         console.log("Fetching notes with params:", queryParams.toString());
         const response = await fetch(
@@ -99,16 +102,29 @@ const NotesPage = () => {
           {
             method: "GET",
             credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
           }
         );
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to fetch notes");
+          console.error("Fetch error response:", errorData);
+          throw new Error(
+            errorData.message || `HTTP error: ${response.status}`
+          );
         }
         const { notes: notesData, total, pages } = await response.json();
+        console.log(
+          "Fetched Notes:",
+          notesData,
+          "Total:",
+          total,
+          "Pages:",
+          pages
+        );
         setNotes(notesData || []);
         setTotalPages(pages || 1);
-        console.log("Fetched Notes:", notesData);
       } catch (err) {
         setError("Failed to load notes: " + err.message);
         console.error("Notes fetch error:", err);
@@ -187,16 +203,20 @@ const NotesPage = () => {
   };
 
   // Convert Google Drive URL to embeddable preview URL
-  const getGoogleDrivePreviewUrl = url => {
+  const getGoogleDrivePreviewUrl = (url, fileType) => {
     const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
     if (!fileIdMatch) return url;
     const fileId = fileIdMatch[1];
-    return `https://drive.google.com/file/d/${fileId}/preview`;
+    if (fileType?.toLowerCase() === "pdf") {
+      return `https://drive.google.com/file/d/${fileId}/preview`;
+    }
+    // Use Google Docs Viewer for non-PDF files (e.g., Word, Excel)
+    return `https://docs.google.com/gview?url=https://drive.google.com/uc?id=${fileId}&embedded=true`;
   };
 
   // Convert Google Drive URL to download URL
   const getGoogleDriveDownloadUrl = url => {
-    const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const fileIdMatch = url.match(/\/d\/([a-zAZ0-9_-]+)/);
     if (fileIdMatch) {
       return `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}`;
     }
@@ -373,6 +393,10 @@ const NotesPage = () => {
                             {note.title}
                           </h3>
                           <p className="text-gray-400 text-xs sm:text-sm">
+                            File Type:{" "}
+                            {note.fileType?.toUpperCase() || "Unknown"}
+                          </p>
+                          <p className="text-gray-400 text-xs sm:text-sm">
                             Uploaded by:{" "}
                             <Link
                               to={`/profile/${note.userId?.roll || "unknown"}`}
@@ -469,7 +493,10 @@ const NotesPage = () => {
                           className="mt-4"
                         >
                           <iframe
-                            src={getGoogleDrivePreviewUrl(note.fileUrl)}
+                            src={getGoogleDrivePreviewUrl(
+                              note.fileUrl,
+                              note.fileType
+                            )}
                             className="w-full h-[300px] sm:h-[400px] lg:h-[500px] rounded-lg border border-blue-500/30"
                             title={`File Viewer: ${note.title}`}
                             allowFullScreen
