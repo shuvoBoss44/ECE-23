@@ -1,568 +1,560 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import {
+  FaFacebook,
+  FaPhone,
+  FaInstagram,
+  FaWhatsapp,
+  FaFilePdf,
+  FaTrash,
+  FaHeart,
+} from "react-icons/fa";
 import { motion } from "framer-motion";
+import { useInView } from "react-intersection-observer";
+import { useEffect, useState } from "react";
 import Background from "./Background";
-import { FaHeart, FaDownload, FaTrash, FaEye, FaTimes } from "react-icons/fa";
 
-// Semesters data with provided courses
-export const semesters = [
-  {
-    name: "1st Year Odd",
-    courses: [
-      "ECE 1101 - Circuits and Systems - I",
-      "ECE 1102 - Circuits and Systems - I Sessional",
-      "ECE 1103 - Computer Programming",
-      "ECE 1104 - Computer Programming Sessional",
-      "Math 1117 - Calculus and Co-ordinate Geometry",
-      "Phy 1117 - Optics and Modern Physics",
-      "Phy 1118 - Optics and Modern Physics Sessional",
-      "Hum 1117 - Technical English",
-      "Hum 1118 - Technical English Sessional",
-      "ECE 1100 - Introduction to Computer System",
-    ],
-  },
-  {
-    name: "1st Year Even",
-    courses: [
-      "ECE 1201 - Circuits and Systems - II",
-      "ECE 1202 - Circuits and Systems - II Sessional",
-      "ECE 1203 - Object Oriented Programming",
-      "ECE 1204 - Object Oriented Programming Sessional",
-      "ECE 1205 - Analog Electronic Circuits - I",
-      "ECE 1206 - Analog Electronic Circuits - I Sessional",
-      "Math 1217 - Transform Methods, Statistics & Complex Variable",
-      "Hum 1217 - Government, Sociology, Environment Protection & History of Independence",
-      "ECE 1200 - Engineering Ethics",
-    ],
-  },
-];
-
-const NotesPage = () => {
+const Profile = ({
+  placeholderImage = "https://zeru.com/blog/wp-content/uploads/How-Do-You-Have-No-Profile-Picture-on-Facebook_25900",
+}) => {
+  const { roll } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [student, setStudent] = useState(null);
   const [notes, setNotes] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState("");
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [viewedNoteId, setViewedNoteId] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [notesLoading, setNotesLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notesError, setNotesError] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("All Semesters");
+  const { ref: inViewRef, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+    rootMargin: "100px",
+  });
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
 
-  // Fetch current user information
+  // Fetch current user data
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const response = await fetch(
-          "https://ece-23-backend.onrender.com/api/users/me",
+          "https://ece-23-backend.onrender.com/api/auth/me",
           {
             method: "GET",
             credentials: "include",
           }
         );
-        if (response.ok) {
-          const userData = await response.json();
-          setCurrentUser(userData);
-          console.log("Current User:", userData);
-        } else {
-          setCurrentUser(null);
-          console.log("No user logged in or unauthorized:", response.status);
+        if (!response.ok) {
+          throw new Error("Failed to fetch user");
         }
+        const data = await response.json();
+        setCurrentUser(data);
       } catch (err) {
-        setError("Failed to fetch user data: " + err.message);
-        setCurrentUser(null);
-        console.error("User fetch error:", err);
+        console.error("Fetch current user error:", err);
       }
     };
+
     fetchCurrentUser();
   }, []);
 
-  // Fetch notes from backend with filters
+  // Fetch user data by roll
   useEffect(() => {
-    const fetchNotes = async () => {
-      if (!selectedSemester || !selectedCourse) {
-        console.log("Skipping fetch: Semester or Course not selected");
-        return;
-      }
+    const fetchUser = async () => {
       setLoading(true);
       setError("");
       try {
-        const courseCode = selectedCourse.split(" - ")[0].trim();
-        const queryParams = new URLSearchParams({
-          page,
-          limit: 10,
-          semester: selectedSemester,
-          courseNo: courseCode,
-          isImportantLink: "false",
-        });
-        console.log("Fetching notes with params:", queryParams.toString());
         const response = await fetch(
-          `https://ece-23-backend.onrender.com/api/notes?${queryParams}`,
+          `https://ece-23-backend.onrender.com/api/users/${roll}`,
           {
             method: "GET",
             credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
           }
         );
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Fetch error response:", errorData);
-          throw new Error(
-            errorData.message || `HTTP error: ${response.status}`
-          );
+          throw new Error("User not found");
         }
-        const { notes: notesData, total, pages } = await response.json();
-        console.log(
-          "Fetched Notes:",
-          notesData,
-          "Total:",
-          total,
-          "Pages:",
-          pages
-        );
-        setNotes(notesData || []);
-        setTotalPages(pages || 1);
+        const data = await response.json();
+        setStudent(data);
       } catch (err) {
-        setError("Failed to load notes: " + err.message);
-        console.error("Notes fetch error:", err);
+        console.error("Fetch user error:", err);
+        setError(err.message || "Failed to load user data");
       } finally {
         setLoading(false);
       }
     };
-    fetchNotes();
-  }, [page, selectedSemester, selectedCourse]);
 
-  const handleDeleteNote = async note => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete the note "${note.title}"?`
-      )
-    ) {
-      setLoading(true);
-      setError("");
-      setSuccess("");
+    fetchUser();
+    window.scrollTo(0, 0);
+    if (history.scrollRestoration) {
+      history.scrollRestoration = "manual";
+    }
+  }, [roll]);
+
+  // Fetch notes by userId
+  useEffect(() => {
+    if (!student?._id) return;
+
+    const fetchNotes = async () => {
+      setNotesLoading(true);
+      setNotesError("");
       try {
         const response = await fetch(
-          `https://ece-23-backend.onrender.com/api/notes/${note._id}`,
+          `https://ece-23-backend.onrender.com/api/notes/${student._id}?page=1&limit=10`,
           {
-            method: "DELETE",
+            method: "GET",
             credentials: "include",
           }
         );
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to delete note");
+          throw new Error("Failed to fetch notes");
         }
-        setNotes(notes.filter(n => n._id !== note._id));
-        setViewedNoteId(null);
-        setSuccess("Note deleted successfully!");
+        const data = await response.json();
+        setNotes(data.notes || []);
       } catch (err) {
-        setError("Failed to delete note: " + err.message);
+        console.error("Fetch notes error:", err);
+        setNotesError(err.message || "Failed to load notes");
       } finally {
-        setLoading(false);
+        setNotesLoading(false);
       }
+    };
+
+    fetchNotes();
+  }, [student?._id]);
+
+  // Function to sort notes by semester (ascending, missing semesters at the end)
+  const sortNotesBySemester = notesArray => {
+    return [...notesArray].sort((a, b) => {
+      const semesterA = a.semester?.trim() || "";
+      const semesterB = b.semester?.trim() || "";
+      if (!semesterA && !semesterB) return 0;
+      if (!semesterA) return 1;
+      if (!semesterB) return -1;
+      return semesterA.localeCompare(semesterB, undefined, { numeric: true });
+    });
+  };
+
+  // Get unique semesters for dropdown
+  const uniqueSemesters = [
+    "All Semesters",
+    ...new Set(notes.map(note => note.semester?.trim()).filter(Boolean)),
+  ];
+
+  // Filter and sort notes
+  const filteredNotes =
+    selectedSemester === "All Semesters"
+      ? sortNotesBySemester(notes)
+      : sortNotesBySemester(
+          notes.filter(note => note.semester?.trim() === selectedSemester)
+        );
+
+  // Convert Google Drive URL to embeddable preview URL
+  const getGoogleDrivePreviewUrl = url => {
+    const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (!fileIdMatch) return url;
+    const fileId = fileIdMatch[1];
+    return `https://drive.google.com/file/d/${fileId}/preview`;
+  };
+
+  // Handle delete note
+  const handleDeleteNote = async noteId => {
+    if (!confirm("Are you sure you want to delete this note?")) return;
+    try {
+      const response = await fetch(
+        `https://ece-23-backend.onrender.com/api/notes/${noteId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to delete note");
+      }
+      setNotes(notes.filter(note => note._id !== noteId));
+    } catch (err) {
+      console.error("Delete note error:", err);
+      alert("Failed to delete note: " + err.message);
     }
   };
 
-  const handleLoveToggle = async noteId => {
-    if (!currentUser) {
-      setError("You must be logged in to love a note.");
+  // Handle toggle love reaction with optimistic update
+  const handleToggleLove = async noteId => {
+    if (!currentUser?._id) {
+      alert("You must be logged in to love a note.");
       return;
     }
-    setLoading(true);
-    setError("");
+
+    // Store original notes for rollback in case of error
+    const originalNotes = [...notes];
+
+    // Optimistically update the state
+    setNotes(
+      notes.map(note => {
+        if (note._id === noteId) {
+          const userLoved = note.loveReactions?.includes(currentUser._id);
+          const updatedReactions = userLoved
+            ? note.loveReactions.filter(id => id !== currentUser._id)
+            : [...(note.loveReactions || []), currentUser._id];
+          return { ...note, loveReactions: updatedReactions };
+        }
+        return note;
+      })
+    );
+
+    // Send request to server
     try {
       const response = await fetch(
         `https://ece-23-backend.onrender.com/api/notes/${noteId}/love`,
         {
           method: "POST",
           credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
         }
       );
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to toggle love");
+        throw new Error("Failed to toggle love reaction");
       }
+      // Optionally, update state with server response if needed
       const updatedNote = await response.json();
       setNotes(
         notes.map(note =>
-          note._id === noteId ? { ...note, loves: updatedNote.loves } : note
+          note._id === noteId
+            ? { ...note, loveReactions: updatedNote.loveReactions }
+            : note
         )
       );
     } catch (err) {
-      setError("Failed to toggle love: " + err.message);
-    } finally {
-      setLoading(false);
+      console.error("Toggle love error:", err);
+      // Revert to original state on error
+      setNotes(originalNotes);
+      alert("Failed to toggle love reaction: " + err.message);
     }
   };
 
-  // Convert Google Drive URL to embeddable preview URL
-  const getGoogleDrivePreviewUrl = (url, fileType) => {
-    const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (!fileIdMatch) return url;
-    const fileId = fileIdMatch[1];
-    if (fileType?.toLowerCase() === "pdf") {
-      return `https://drive.google.com/file/d/${fileId}/preview`;
-    }
-    // Use Google Docs Viewer for non-PDF files (e.g., Word, Excel)
-    return `https://docs.google.com/gview?url=https://drive.google.com/uc?id=${fileId}&embedded=true`;
+  const handleImageLoad = () => {
+    setTimeout(() => setIsImageLoaded(true), 300);
   };
 
-  // Convert Google Drive URL to download URL
-  const getGoogleDriveDownloadUrl = url => {
-    const fileIdMatch = url.match(/\/d\/([a-zAZ0-9_-]+)/);
-    if (fileIdMatch) {
-      return `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}`;
-    }
-    return url;
+  const handleImageError = e => {
+    e.target.src = placeholderImage;
+    setTimeout(() => setIsImageLoaded(true), 300);
   };
 
-  // Filter notes based on search query
-  const filteredNotes = notes.filter(note =>
-    note.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-white text-lg font-semibold">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !student) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center">
+        <div className="text-center text-red-500 text-lg font-semibold py-8">
+          {error || "Student not found!"}
+        </div>
+      </div>
+    );
+  }
+
+  const { name, district, school, college, image, quote, socialMedia } =
+    student;
+  const { facebook, phone, instagram, whatsapp } = socialMedia || {};
 
   return (
     <>
       <Background />
-      <div className="min-h-screen bg-black/50 backdrop-blur-sm flex flex-col p-4 sm:p-6">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-grow max-w-6xl mx-auto w-full"
+          className="flex-grow p-3 sm:p-6 md:p-8"
         >
-          {/* Error and Success Messages */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-red-900/80 border-l-4 border-red-500 text-red-200 p-4 mb-6 rounded-lg backdrop-blur-sm text-sm sm:text-base flex items-center"
-            >
-              <FaTimes className="mr-2" />
-              {error}
-            </motion.div>
-          )}
-          {success && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-green-900/80 border-l-4 border-green-500 text-green-200 p-4 mb-6 rounded-lg backdrop-blur-sm text-sm sm:text-base flex items-center"
-            >
-              <FaHeart className="mr-2" />
-              {success}
-            </motion.div>
-          )}
-
-          {/* Semester Selection */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="bg-gray-900/80 backdrop-blur-lg rounded-xl p-4 sm:p-6 mb-6 border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-shadow"
-          >
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-4">
-              Select Semester
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {semesters.map(sem => (
-                <motion.button
-                  key={sem.name}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setSelectedSemester(sem.name);
-                    setSelectedCourse("");
-                    setNotes([]);
-                    setViewedNoteId(null);
-                    setPage(1);
-                    setSearchQuery("");
-                  }}
-                  className={`p-3 rounded-lg text-sm sm:text-base ${
-                    selectedSemester === sem.name
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                      : "bg-gray-800/50 text-gray-200 hover:bg-gray-700/60"
-                  } transition-all duration-200 border border-blue-500/30`}
-                >
-                  {sem.name}
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Course Selection */}
-          {selectedSemester && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="bg-gray-900/80 backdrop-blur-lg rounded-xl p-4 sm:p-6 mb-6 border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-shadow"
-            >
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-4">
-                Select Course
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {semesters
-                  .find(sem => sem.name === selectedSemester)
-                  ?.courses.map(course => (
-                    <motion.button
-                      key={course}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        setSelectedCourse(course);
-                        setNotes([]);
-                        setViewedNoteId(null);
-                        setPage(1);
-                        setSearchQuery("");
-                      }}
-                      className={`p-3 rounded-lg text-sm sm:text-base ${
-                        selectedCourse === course
-                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                          : "bg-gray-800/50 text-gray-200 hover:bg-gray-700/60"
-                      } transition-all duration-200 border border-blue-500/30`}
-                    >
-                      {course}
-                    </motion.button>
-                  ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Notes List */}
-          {selectedCourse && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="bg-gray-900/80 backdrop-blur-lg rounded-xl p-4 sm:p-6 mb-6 border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-shadow"
-            >
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-4">
-                Notes for {selectedCourse}
-              </h2>
-              {/* Search Bar */}
+          <div className="max-w-4xl mx-auto bg-gray-900/85 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-blue-500/20">
+            {/* Cover Photo */}
+            <div className="relative h-48 sm:h-60 md:h-72 bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
               <motion.div
+                className="absolute inset-0 bg-gradient-to-t from-transparent to-blue-500/20 animate-pulse-slow"
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 5, repeat: Infinity }}
+              />
+              {quote && (
+                <motion.blockquote
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
+                  className="absolute top-4 left-1/2 transform -translate-x-1/2 w-11/12 sm:w-3/4 text-center text-white text-base sm:text-lg md:text-xl font-serif italic drop-shadow-lg px-3"
+                >
+                  <span className="text-blue-200">“</span>
+                  {quote}
+                  <span className="text-blue-200">”</span>
+                </motion.blockquote>
+              )}
+            </div>
+
+            {/* Profile Info Header */}
+            <div className="relative -mt-20 sm:-mt-24 md:-mt-28 flex flex-col items-center px-3 sm:px-4">
+              <motion.div
+                ref={inViewRef}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-full border-4 sm:border-6 border-blue-500/50 overflow-hidden shadow-lg relative group"
+              >
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/30 to-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {(!inView || (inView && !isImageLoaded)) && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gray-800/80 z-20">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-3 border-b-3 border-blue-400" />
+                  </div>
+                )}
+                <img
+                  src={inView && image ? `/${image}` : placeholderImage}
+                  alt={name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                />
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.4 }}
+                className="mt-3 text-white text-2xl sm:text-3xl md:text-4xl font-extrabold text-center tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-purple-300"
+              >
+                {name}
+              </motion.h1>
+              <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.4 }}
-                className="mb-4"
+                className="text-blue-300 text-base sm:text-lg md:text-xl font-medium"
               >
-                <input
-                  type="text"
-                  placeholder="Search notes by title..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full p-3 rounded-lg bg-gray-800/50 text-gray-200 placeholder-gray-400 border border-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm sm:text-base"
-                  aria-label="Search notes by title"
-                />
-              </motion.div>
-              {loading ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex justify-center mb-4 items-center"
-                >
-                  <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="ml-2 text-blue-200 text-sm sm:text-base">
-                    Loading notes...
+                Roll: {roll}
+              </motion.p>
+            </div>
+
+            {/* About Section */}
+            <div className="p-4 sm:p-6 md:p-8 space-y-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="bg-gray-800/70 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/20 transition-shadow duration-300"
+              >
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                  About
+                </h2>
+                <div className="grid md:grid-cols-2 gap-3 text-gray-200 text-sm sm:text-base">
+                  <p className="flex items-center gap-2">
+                    <span className="text-blue-400 font-semibold">
+                      Hometown:
+                    </span>{" "}
+                    {district || "Not provided"}
                   </p>
-                </motion.div>
-              ) : filteredNotes.length === 0 ? (
-                <p className="text-gray-400 text-sm sm:text-base">
-                  No notes match your search or available for this course.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {filteredNotes.map(note => (
-                    <motion.div
-                      key={note._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4 }}
-                      className="bg-gray-800/50 rounded-lg p-4 hover:bg-gray-700/60 transition-all duration-300 border border-blue-500/20"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                        <div>
-                          <h3 className="text-base sm:text-lg font-semibold text-white">
+                  <p className="flex items-center gap-2">
+                    <span className="text-blue-400 font-semibold">School:</span>{" "}
+                    {school || "Not provided"}
+                  </p>
+                  <p className="flex items-center gap-3">
+                    <span className="text-blue-400 font-semibold">
+                      College:
+                    </span>{" "}
+                    {college || "Not provided"}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Shared Notes Section */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 0.5 }}
+                className="bg-gray-800/70 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/20 transition-shadow duration-300"
+              >
+                <h2 className="text-xl sm:text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 mb-3">
+                  Shared Notes
+                </h2>
+                <div className="mb-4">
+                  <label
+                    htmlFor="semesterFilter"
+                    className="block text-sm font-medium text-gray-200 mb-1"
+                  >
+                    Filter by Semester
+                  </label>
+                  <select
+                    id="semesterFilter"
+                    value={selectedSemester}
+                    onChange={e => setSelectedSemester(e.target.value)}
+                    className="w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                  >
+                    {uniqueSemesters.map(semester => (
+                      <option
+                        key={semester}
+                        value={semester}
+                        className="bg-gray-800"
+                      >
+                        {semester}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {notesLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : notesError ? (
+                  <p className="text-red-400 text-center text-sm sm:text-base">
+                    {notesError}
+                  </p>
+                ) : filteredNotes.length > 0 ? (
+                  <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
+                    {filteredNotes.map(note => (
+                      <motion.div
+                        key={note._id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg hover:bg-gray-600/50 transition"
+                      >
+                        <div className="flex-1">
+                          <p className="text-white font-semibold text-sm sm:text-base">
                             {note.title}
-                          </h3>
-                          <p className="text-gray-400 text-xs sm:text-sm">
-                            File Type:{" "}
-                            {note.fileType?.toUpperCase() || "Unknown"}
                           </p>
-                          <p className="text-gray-400 text-xs sm:text-sm">
-                            Uploaded by:{" "}
-                            <Link
-                              to={`/profile/${note.userId?.roll || "unknown"}`}
-                              className="text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                              {note.userId?.name || "Unknown"} (
-                              {note.userId?.roll || "N/A"})
-                            </Link>
-                          </p>
-                          <p className="text-gray-400 text-xs sm:text-sm">
-                            Uploaded on:{" "}
-                            {new Date(note.createdAt).toLocaleString()}
-                          </p>
-                          <p className="text-gray-400 text-xs sm:text-sm flex items-center">
-                            <FaHeart className="mr-1" />
-                            Loves: {note.loves?.length || 0}
+                          <p className="text-gray-300 text-xs sm:text-sm">
+                            Semester: {note.semester || "N/A"} | Course:{" "}
+                            {note.courseNo || "N/A"}
                           </p>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          <motion.button
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() =>
-                              setViewedNoteId(
-                                viewedNoteId === note._id ? null : note._id
-                              )
-                            }
-                            className="p-2 bg-blue-600 rounded-lg text-white text-xs sm:text-sm hover:bg-blue-700 transition-all flex items-center"
-                            aria-label={
-                              viewedNoteId === note._id
-                                ? "Hide File"
-                                : "View File"
-                            }
-                          >
-                            <FaEye className="mr-1" />
-                            {viewedNoteId === note._id ? "Hide" : "View"}
-                          </motion.button>
+                        <div className="flex items-center gap-2">
                           <motion.a
-                            href={getGoogleDriveDownloadUrl(note.fileUrl)}
-                            download
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="p-2 bg-green-600 rounded-lg text-white text-xs sm:text-sm hover:bg-green-700 transition-all flex items-center"
-                            aria-label={`Download ${note.title}`}
+                            href={getGoogleDrivePreviewUrl(note.file)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition"
+                            whileHover={{ scale: 1.2, rotate: 10 }}
+                            whileTap={{ scale: 0.9 }}
+                            aria-label={`Preview ${note.title}`}
                           >
-                            <FaDownload className="mr-1" />
-                            Download
+                            <FaFilePdf className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                           </motion.a>
                           <motion.button
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleLoveToggle(note._id)}
-                            disabled={!currentUser}
-                            className={`p-2 rounded-lg text-white text-xs sm:text-sm transition-all flex items-center ${
-                              note.loves?.includes(currentUser?._id)
-                                ? "bg-pink-600 hover:bg-pink-700"
-                                : "bg-gray-600 hover:bg-gray-700"
-                            } ${
-                              !currentUser
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
+                            onClick={() => handleToggleLove(note._id)}
+                            className={`p-2 rounded-full transition ${
+                              note.loveReactions?.includes(currentUser?._id)
+                                ? "bg-red-600 hover:bg-red-700"
+                                : "bg-gray-600 hover:bg-gray-500"
                             }`}
-                            aria-label={
-                              note.loves?.includes(currentUser?._id)
-                                ? "Unlike"
-                                : "Love"
-                            }
+                            whileHover={{ scale: 1.2, rotate: 10 }}
+                            whileTap={{ scale: 0.9 }}
+                            aria-label="Toggle love reaction"
                           >
-                            <FaHeart className="mr-1" />
-                            {note.loves?.includes(currentUser?._id)
-                              ? "Unlike"
-                              : "Love"}
+                            <FaHeart className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="ml-1 text-white text-xs">
+                              {note.loveReactions?.length || 0}
+                            </span>
                           </motion.button>
-                          {currentUser?._id === note.userId?._id && (
+                          {currentUser?._id === note.uploaderId && (
                             <motion.button
-                              whileHover={{ scale: 1.03 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleDeleteNote(note)}
-                              className="p-2 bg-red-600 rounded-lg text-white text-xs sm:text-sm hover:bg-red-700 transition-all flex items-center"
+                              onClick={() => handleDeleteNote(note._id)}
+                              className="p-2 bg-red-600 rounded-full hover:bg-red-700 transition"
+                              whileHover={{ scale: 1.2, rotate: 10 }}
+                              whileTap={{ scale: 0.9 }}
                               aria-label={`Delete ${note.title}`}
                             >
-                              <FaTrash className="mr-1" />
-                              Delete
+                              <FaTrash className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                             </motion.button>
                           )}
                         </div>
-                      </div>
-                      {/* File Viewer */}
-                      {viewedNoteId === note._id && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4 }}
-                          className="mt-4"
-                        >
-                          <iframe
-                            src={getGoogleDrivePreviewUrl(
-                              note.fileUrl,
-                              note.fileType
-                            )}
-                            className="w-full h-[300px] sm:h-[400px] lg:h-[500px] rounded-lg border border-blue-500/30"
-                            title={`File Viewer: ${note.title}`}
-                            allowFullScreen
-                          />
-                          <div className="flex justify-between items-center mt-2">
-                            <a
-                              href={note.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 bg-green-600 rounded-lg text-white text-xs sm:text-sm hover:bg-green-700 transition-all"
-                            >
-                              Open File in New Tab
-                            </a>
-                            <motion.button
-                              whileHover={{ scale: 1.03 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => setViewedNoteId(null)}
-                              className="p-2 bg-red-600 rounded-lg text-white text-xs sm:text-sm hover:bg-red-700 transition-all"
-                              aria-label="Close File"
-                            >
-                              Close File
-                            </motion.button>
-                          </div>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-                    disabled={page === 1}
-                    className="p-2 bg-blue-600 rounded-lg text-white text-sm disabled:opacity-50 disabled:hover:bg-blue-600 transition-all"
-                    aria-label="Previous page"
-                  >
-                    Previous
-                  </motion.button>
-                  <p className="text-gray-200 text-sm">
-                    Page {page} of {totalPages}
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-center text-sm sm:text-base">
+                    No notes available for the selected semester.
                   </p>
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() =>
-                      setPage(prev => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={page === totalPages}
-                    className="p-2 bg-blue-600 rounded-lg text-white text-sm disabled:opacity-50 disabled:hover:bg-blue-600 transition-all"
-                    aria-label="Next page"
-                  >
-                    Next
-                  </motion.button>
-                </div>
+                )}
+              </motion.div>
+
+              {/* Social Media Links */}
+              {(facebook || phone || instagram || whatsapp) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                  className="bg-gray-800/70 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/20 transition-shadow duration-300"
+                >
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                    Connect
+                  </h2>
+                  <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+                    {facebook && (
+                      <motion.a
+                        href={facebook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 sm:p-3 bg-blue-600 rounded-full hover:bg-blue-700 transition"
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
+                        aria-label="Facebook profile"
+                      >
+                        <FaFacebook className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                      </motion.a>
+                    )}
+                    {phone && (
+                      <motion.a
+                        href={`tel:${phone}`}
+                        className="p-2 sm:p-3 bg-green-600 rounded-full hover:bg-green-700 transition"
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
+                        aria-label="Phone number"
+                      >
+                        <FaPhone className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                      </motion.a>
+                    )}
+                    {instagram && (
+                      <motion.a
+                        href={instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 sm:p-3 bg-pink-600 rounded-full hover:bg-pink-700 transition"
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
+                        aria-label="Instagram profile"
+                      >
+                        <FaInstagram className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                      </motion.a>
+                    )}
+                    {whatsapp && (
+                      <motion.a
+                        href={whatsapp}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 sm:p-3 bg-green-500 rounded-full hover:bg-green-600 transition"
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        whileTap={{ scale: 0.9 }}
+                        aria-label="WhatsApp contact"
+                      >
+                        <FaWhatsapp className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                      </motion.a>
+                    )}
+                  </div>
+                </motion.div>
               )}
-            </motion.div>
-          )}
+            </div>
+          </div>
         </motion.div>
 
-        <footer className="w-full py-4 bg-gray-900/80 backdrop-blur-sm">
-          <div className="max-w-6xl mx-auto px-4 text-center">
-            <p className="text-xs sm:text-sm text-gray-200">
+        {/* Footer */}
+        <footer className="w-full py-4 sm:py-6 bg-gradient-to-t from-slate-900 to-transparent">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <p className="text-xs sm:text-sm text-gray-300">
               Developed by{" "}
               <a
                 href="https://www.facebook.com/shuvo.chakma.16121/"
@@ -583,4 +575,4 @@ const NotesPage = () => {
   );
 };
 
-export default NotesPage;
+export default Profile;
