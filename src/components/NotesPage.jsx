@@ -360,10 +360,7 @@ const NotesPage = () => {
               transition={{ delay: 0.4, duration: 0.5 }}
               className="bg-gray-900/80 backdrop-blur-lg rounded-xl p-4 sm:p-6 mb-6 border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-shadow"
             >
-              <h2
-                className="text-lg sm:text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-4
-00 to-purple-400 mb-4"
-              >
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-4">
                 Notes for {selectedCourse}
               </h2>
               {/* Search Bar */}
