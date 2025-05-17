@@ -4,7 +4,6 @@ import {
   FaPhone,
   FaInstagram,
   FaWhatsapp,
-  FaArrowLeft,
   FaFilePdf,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
@@ -24,6 +23,7 @@ const Profile = ({
   const [notesLoading, setNotesLoading] = useState(true);
   const [error, setError] = useState("");
   const [notesError, setNotesError] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc"); // asc or desc for semester sorting
 
   const { ref: inViewRef, inView } = useInView({
     triggerOnce: true,
@@ -96,6 +96,20 @@ const Profile = ({
     fetchNotes();
   }, [student?._id]);
 
+  // Sort notes by semester
+  const sortedNotes = [...notes].sort((a, b) => {
+    const semesterA = a.semester || "";
+    const semesterB = b.semester || "";
+    if (sortOrder === "asc") {
+      return semesterA.localeCompare(semesterB);
+    }
+    return semesterB.localeCompare(semesterA);
+  });
+
+  const handleSortChange = order => {
+    setSortOrder(order);
+  };
+
   const handleImageLoad = () => {
     setTimeout(() => setIsImageLoaded(true), 300);
   };
@@ -105,17 +119,29 @@ const Profile = ({
     setTimeout(() => setIsImageLoaded(true), 300);
   };
 
-  const handleBack = () => {
-    if (location.state?.from === "home" && location.state?.cardId) {
-      navigate("/", { state: { cardId: location.state.cardId } });
-    } else {
-      navigate(-1);
+  // Convert Google Drive URL to embeddable preview URL
+  const getGoogleDrivePreviewUrl = (url, fileType) => {
+    const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (!fileIdMatch) return url;
+    const fileId = fileIdMatch[1];
+    if (fileType?.toLowerCase() === "pdf") {
+      return `https://drive.google.com/file/d/${fileId}/preview`;
     }
+    return `https://docs.google.com/gview?url=https://drive.google.com/uc?id=${fileId}&embedded=true`;
+  };
+
+  // Convert Google Drive URL to download URL
+  const getGoogleDriveDownloadUrl = url => {
+    const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (fileIdMatch) {
+      return `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}`;
+    }
+    return url;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center pt-16">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-white text-lg font-semibold">Loading...</p>
@@ -126,7 +152,7 @@ const Profile = ({
 
   if (error || !student) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center pt-16">
         <div className="text-center text-red-500 text-lg font-semibold py-8">
           {error || "Student not found!"}
         </div>
@@ -141,29 +167,13 @@ const Profile = ({
   return (
     <>
       <Background />
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 pt-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-grow p-3 sm:p-6 md:p-8 pt-3"
+          className="flex-grow p-3 sm:p-6 md:p-8"
         >
-          {/* Back Button at Top */}
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2, duration: 0.4 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleBack}
-            className="mb-4 p-2 sm:p-3 bg-blue-500/80 rounded-full hover:bg-blue-600 transition-all backdrop-blur-sm flex items-center gap-2"
-          >
-            <FaArrowLeft className="text-white w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-white text-xs sm:text-sm font-medium">
-              Back
-            </span>
-          </motion.button>
-
           <div className="max-w-4xl mx-auto bg-gray-900/85 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-blue-500/20">
             {/* Cover Photo */}
             <div className="relative h-48 sm:h-60 md:h-72 bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500">
@@ -268,9 +278,37 @@ const Profile = ({
                 transition={{ delay: 0.8, duration: 0.5 }}
                 className="bg-gray-800/70 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/20 transition-shadow duration-300"
               >
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                  Shared Notes
-                </h2>
+                <div className="flex justify-between items-center mb-3">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                    Shared Notes
+                  </h2>
+                  <div className="flex gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleSortChange("asc")}
+                      className={`px-3 py-1 rounded-lg text-sm ${
+                        sortOrder === "asc"
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-700 text-gray-200"
+                      } hover:bg-blue-700 transition-all`}
+                    >
+                      Sort Asc
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleSortChange("desc")}
+                      className={`px-3 py-1 rounded-lg text-sm ${
+                        sortOrder === "desc"
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-700 text-gray-200"
+                      } hover:bg-blue-700 transition-all`}
+                    >
+                      Sort Desc
+                    </motion.button>
+                  </div>
+                </div>
                 {notesLoading ? (
                   <div className="flex items-center justify-center py-4">
                     <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -279,9 +317,9 @@ const Profile = ({
                   <p className="text-red-400 text-center text-sm sm:text-base">
                     {notesError}
                   </p>
-                ) : notes.length > 0 ? (
+                ) : sortedNotes.length > 0 ? (
                   <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
-                    {notes.map(note => (
+                    {sortedNotes.map(note => (
                       <motion.div
                         key={note._id}
                         initial={{ opacity: 0, x: -10 }}
@@ -294,11 +332,16 @@ const Profile = ({
                             {note.title}
                           </p>
                           <p className="text-gray-300 text-xs sm:text-sm">
-                            Semester: {note.semester} | Course: {note.courseNo}
+                            Semester: {note.semester || "N/A"} | Course:{" "}
+                            {note.courseNo || "N/A"} | Type:{" "}
+                            {note.fileType?.toUpperCase() || "Unknown"}
                           </p>
                         </div>
                         <motion.a
-                          href={note.pdf}
+                          href={getGoogleDrivePreviewUrl(
+                            note.fileUrl,
+                            note.fileType
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition"
@@ -397,7 +440,7 @@ const Profile = ({
               </a>
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              All rights Windows reserved by ECE-23
+              All rights reserved by ECE-23
             </p>
           </div>
         </footer>

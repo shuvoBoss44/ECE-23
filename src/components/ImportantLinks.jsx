@@ -15,6 +15,13 @@ const ImportantLinks = () => {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [title, setTitle] = useState("");
   const [fileUrl, setFileUrl] = useState("");
+  const [semester, setSemester] = useState("");
+  const [courseNo, setCourseNo] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
+
+  // Predefined semesters (same as NotesPage.jsx)
+  const semesters = ["1st Year Odd", "1st Year Even"];
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -50,6 +57,12 @@ const ImportantLinks = () => {
           limit: 10,
           isImportantLink: true,
         });
+        if (semester) {
+          queryParams.append("semester", semester);
+        }
+        if (searchQuery) {
+          queryParams.append("search", searchQuery);
+        }
         const response = await fetch(
           `https://ece-23-backend.onrender.com/api/notes?${queryParams}`,
           {
@@ -73,7 +86,7 @@ const ImportantLinks = () => {
       }
     };
     fetchImportantLinks();
-  }, [page]);
+  }, [page, semester, searchQuery]);
 
   const handleDeleteLink = async linkId => {
     if (window.confirm("Are you sure you want to delete this link?")) {
@@ -107,7 +120,7 @@ const ImportantLinks = () => {
     setLoading(true);
 
     if (!title || !fileUrl) {
-      setError("All fields are required");
+      setError("Title and Google Drive URL are required");
       setLoading(false);
       return;
     }
@@ -123,7 +136,10 @@ const ImportantLinks = () => {
     const linkData = {
       title,
       fileUrl,
+      semester,
+      courseNo,
       isImportantLink: true,
+      fileType: "pdf", // Default to PDF, as most links are PDFs
     };
 
     try {
@@ -149,6 +165,8 @@ const ImportantLinks = () => {
       setSuccess("Important link uploaded successfully!");
       setTitle("");
       setFileUrl("");
+      setSemester("");
+      setCourseNo("");
       setShowUploadForm(false);
       // Refresh links
       const queryParams = new URLSearchParams({
@@ -156,6 +174,12 @@ const ImportantLinks = () => {
         limit: 10,
         isImportantLink: true,
       });
+      if (semester) {
+        queryParams.append("semester", semester);
+      }
+      if (searchQuery) {
+        queryParams.append("search", searchQuery);
+      }
       const refreshResponse = await fetch(
         `https://ece-23-backend.onrender.com/api/notes?${queryParams}`,
         {
@@ -166,6 +190,7 @@ const ImportantLinks = () => {
       const { notes: linksData, total, pages } = await refreshResponse.json();
       setImportantLinks(linksData || []);
       setTotalPages(pages || 1);
+      setPage(1);
     } catch (err) {
       console.error("Upload error:", err);
       setError(
@@ -176,10 +201,20 @@ const ImportantLinks = () => {
     }
   };
 
+  // Sort links by semester
+  const sortedLinks = [...importantLinks].sort((a, b) => {
+    const semesterA = a.semester || "";
+    const semesterB = b.semester || "";
+    if (sortOrder === "asc") {
+      return semesterA.localeCompare(semesterB);
+    }
+    return semesterB.localeCompare(semesterA);
+  });
+
   return (
     <>
       <Background />
-      <div className="min-h-screen bg-black/60 backdrop-blur-sm flex flex-col p-4 sm:p-6">
+      <div className="min-h-screen bg-black/60 backdrop-blur-sm flex flex-col p-4 sm:p-6 pt-16 pl-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -217,6 +252,75 @@ const ImportantLinks = () => {
                 <FaLink className="mr-2" />
                 Important Links
               </h2>
+              <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full">
+                <div className="flex-1">
+                  <label
+                    htmlFor="semester"
+                    className="block text-sm font-medium text-gray-200 flex items-center"
+                  >
+                    <FaLink className="mr-2" />
+                    Select Semester
+                  </label>
+                  <select
+                    id="semester"
+                    value={semester}
+                    onChange={e => setSemester(e.target.value)}
+                    className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                  >
+                    <option value="">All Semesters</option>
+                    {semesters.map(sem => (
+                      <option key={sem} value={sem}>
+                        {sem}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label
+                    htmlFor="search"
+                    className="block text-sm font-medium text-gray-200 flex items-center"
+                  >
+                    <FaLink className="mr-2" />
+                    Search Links
+                  </label>
+                  <input
+                    id="search"
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search by title or course..."
+                    className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSortOrder("asc")}
+                  className={`p-2 rounded-lg text-sm ${
+                    sortOrder === "asc"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-700 text-gray-200"
+                  } hover:bg-blue-700 transition-all flex items-center`}
+                  aria-label="Sort ascending by semester"
+                >
+                  Sort Asc
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSortOrder("desc")}
+                  className={`p-2 rounded-lg text-sm ${
+                    sortOrder === "desc"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-700 text-gray-200"
+                  } hover:bg-blue-700 transition-all flex items-center`}
+                  aria-label="Sort descending by semester"
+                >
+                  Sort Desc
+                </motion.button>
+              </div>
               {currentUser && (
                 <motion.button
                   whileHover={{ scale: 1.03 }}
@@ -254,6 +358,45 @@ const ImportantLinks = () => {
                       required
                       className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400"
                       placeholder="Enter link title"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="semester"
+                      className="block text-sm font-medium text-gray-200 flex items-center"
+                    >
+                      <FaLink className="mr-2" />
+                      Semester
+                    </label>
+                    <select
+                      id="semester"
+                      value={semester}
+                      onChange={e => setSemester(e.target.value)}
+                      className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                    >
+                      <option value="">Select Semester (Optional)</option>
+                      {semesters.map(sem => (
+                        <option key={sem} value={sem}>
+                          {sem}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="courseNo"
+                      className="block text-sm font-medium text-gray-200 flex items-center"
+                    >
+                      <FaLink className="mr-2" />
+                      Course Number
+                    </label>
+                    <input
+                      type="text"
+                      id="courseNo"
+                      value={courseNo}
+                      onChange={e => setCourseNo(e.target.value)}
+                      className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400"
+                      placeholder="e.g., ECE101 (Optional)"
                     />
                   </div>
                   <div>
@@ -300,7 +443,7 @@ const ImportantLinks = () => {
                 </form>
               </motion.div>
             )}
-            {loading && !importantLinks.length ? (
+            {loading && !sortedLinks.length ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -311,13 +454,13 @@ const ImportantLinks = () => {
                   Loading links...
                 </p>
               </motion.div>
-            ) : importantLinks.length === 0 ? (
+            ) : sortedLinks.length === 0 ? (
               <p className="text-gray-400 text-center text-sm sm:text-base flex items-center justify-center">
                 <FaLink className="mr-2" />
                 No important links available.
               </p>
             ) : (
-              importantLinks.map(link => (
+              sortedLinks.map(link => (
                 <motion.div
                   key={link._id}
                   initial={{ opacity: 0, scale: 0.98 }}
@@ -337,6 +480,10 @@ const ImportantLinks = () => {
                         {link.title}
                       </a>
                       <p className="text-gray-400 mt-2 text-xs sm:text-sm">
+                        Semester: {link.semester || "N/A"} | Course:{" "}
+                        {link.courseNo || "N/A"}
+                      </p>
+                      <p className="text-gray-400 text-xs sm:text-sm">
                         Posted by:{" "}
                         <Link
                           to={`/profile/${link.userId?.roll || "unknown"}`}
