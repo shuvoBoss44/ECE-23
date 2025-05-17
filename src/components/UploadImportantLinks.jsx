@@ -18,17 +18,8 @@ const UploadImportantLinks = () => {
   const [isAuthorized, setIsAuthorized] = useState(null);
   const navigate = useNavigate();
 
-  // Predefined semesters (same as ImportantLinks.jsx)
-  const semesters = [
-    "1st Year Odd",
-    "1st Year Even",
-    "2nd Year Odd",
-    "2nd Year Even",
-    "3rd Year Odd",
-    "3rd Year Even",
-    "4th Year Odd",
-    "4th Year Even",
-  ];
+  // Predefined semesters
+  const semesters = ["1st Year Odd", "1st Year Even"];
 
   // Fetch current user information
   useEffect(() => {
@@ -65,8 +56,16 @@ const UploadImportantLinks = () => {
     setSuccess("");
     setLoading(true);
 
-    if (!title || (!file && !fileUrl)) {
-      setError("Title and either a file or Google Drive URL are required");
+    if (!title || !semester || (!file && !fileUrl)) {
+      setError(
+        "Title, semester, and either a file or Google Drive URL are required"
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (file && fileUrl) {
+      setError("Please provide either a file or a Google Drive URL, not both");
       setLoading(false);
       return;
     }
@@ -83,14 +82,12 @@ const UploadImportantLinks = () => {
 
     const formData = new FormData();
     formData.append("title", title);
+    formData.append("semester", semester);
     if (file) {
       formData.append("file", file);
     } else {
       formData.append("fileUrl", fileUrl);
       formData.append("fileType", fileType);
-    }
-    if (semester) {
-      formData.append("semester", semester);
     }
     if (courseNo) {
       formData.append("courseNo", courseNo);
@@ -121,12 +118,7 @@ const UploadImportantLinks = () => {
       setFileType("pdf");
       setSemester("");
       setCourseNo("");
-      // Redirect to ImportantLinks with semester filter
-      navigate(
-        semester
-          ? `/important-links?semester=${encodeURIComponent(semester)}`
-          : "/important-links"
-      );
+      navigate(`/important-links?semester=${encodeURIComponent(semester)}`);
     } catch (err) {
       console.error("Upload error:", err);
       setError(
@@ -152,12 +144,12 @@ const UploadImportantLinks = () => {
   return (
     <>
       <Background />
-      <div className="min-h-screen bg-black/50 backdrop-blur-sm flex flex-col p-4 sm:p-6 pt-16 pl-16">
+      <div className="min-h-screen bg-black/50 backdrop-blur-sm flex flex-col p-4 sm:p-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="bg-gray-900/80 backdrop-blur-lg rounded-xl max-w-lg w-full p-4 sm:p-6 border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-shadow z-10 mx-auto mt-8"
+          className="bg-gray-900/80 backdrop-blur-lg rounded-xl max-w-lg w-full p-4 sm:p-6 border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-shadow mx-auto mt-8"
         >
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6 text-center flex items-center justify-center">
             <FaLink className="mr-2" />
@@ -215,10 +207,11 @@ const UploadImportantLinks = () => {
                 id="semester"
                 value={semester}
                 onChange={e => setSemester(e.target.value)}
+                required
                 className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
                 aria-label="Select semester"
               >
-                <option value="">Select Semester (Optional)</option>
+                <option value="">Select Semester</option>
                 {semesters.map(sem => (
                   <option key={sem} value={sem} className="bg-gray-800">
                     {sem}
@@ -256,7 +249,7 @@ const UploadImportantLinks = () => {
                 id="fileType"
                 value={fileType}
                 onChange={e => setFileType(e.target.value)}
-                disabled={file} // Disable if a file is selected
+                disabled={file}
                 className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition disabled:opacity-50"
                 aria-label="Select file type"
               >
@@ -310,7 +303,7 @@ const UploadImportantLinks = () => {
                 id="fileUrl"
                 value={fileUrl}
                 onChange={e => setFileUrl(e.target.value)}
-                disabled={file} // Disable if a file is selected
+                disabled={file}
                 className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400 disabled:opacity-50"
                 placeholder="https://drive.google.com/file/d/..."
                 aria-label="Google Drive URL"
@@ -342,7 +335,7 @@ const UploadImportantLinks = () => {
             </motion.button>
           </form>
         </motion.div>
-        <footer className="w-full py-4 bg-gray-900/80 backdrop-blur-sm mt-auto relative z-10">
+        <footer className="w-full py-4 bg-gray-900/80 backdrop-blur-sm mt-auto">
           <div className="max-w-6xl mx-auto px-4 text-center">
             <p className="text-xs sm:text-sm text-gray-200">
               Developed by{" "}

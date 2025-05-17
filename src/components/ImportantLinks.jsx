@@ -15,12 +15,13 @@ const ImportantLinks = () => {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [title, setTitle] = useState("");
   const [fileUrl, setFileUrl] = useState("");
+  const [file, setFile] = useState(null);
+  const [fileType, setFileType] = useState("pdf");
   const [semester, setSemester] = useState("");
   const [courseNo, setCourseNo] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc");
 
-  // Predefined semesters (same as NotesPage.jsx)
+  // Predefined semesters
   const semesters = ["1st Year Odd", "1st Year Even"];
 
   useEffect(() => {
@@ -119,38 +120,50 @@ const ImportantLinks = () => {
     setSuccess("");
     setLoading(true);
 
-    if (!title || !fileUrl) {
-      setError("Title and Google Drive URL are required");
+    if (!title || !semester || (!file && !fileUrl)) {
+      setError(
+        "Title, semester, and either a file or Google Drive URL are required"
+      );
       setLoading(false);
       return;
     }
 
-    const googleDriveRegex =
-      /^https:\/\/(drive\.google\.com\/file\/d\/|docs\.google\.com\/.*id=)[a-zA-Z0-9_-]+/;
-    if (!googleDriveRegex.test(fileUrl)) {
-      setError("Please provide a valid Google Drive URL");
+    if (file && fileUrl) {
+      setError("Please provide either a file or a Google Drive URL, not both");
       setLoading(false);
       return;
     }
 
-    const linkData = {
-      title,
-      fileUrl,
-      semester,
-      courseNo,
-      isImportantLink: true,
-      fileType: "pdf", // Default to PDF, as most links are PDFs
-    };
+    if (fileUrl) {
+      const googleDriveRegex =
+        /^https:\/\/(drive\.google\.com\/file\/d\/|docs\.google\.com\/.*id=)[a-zA-Z0-9_-]+/;
+      if (!googleDriveRegex.test(fileUrl)) {
+        setError("Please provide a valid Google Drive URL");
+        setLoading(false);
+        return;
+      }
+    }
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("semester", semester);
+    if (file) {
+      formData.append("file", file);
+    } else {
+      formData.append("fileUrl", fileUrl);
+      formData.append("fileType", fileType);
+    }
+    if (courseNo) {
+      formData.append("courseNo", courseNo);
+    }
+    formData.append("isImportantLink", true);
 
     try {
       const response = await fetch(
         "https://ece-23-backend.onrender.com/api/notes",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(linkData),
+          body: formData,
           credentials: "include",
         }
       );
@@ -165,6 +178,8 @@ const ImportantLinks = () => {
       setSuccess("Important link uploaded successfully!");
       setTitle("");
       setFileUrl("");
+      setFile(null);
+      setFileType("pdf");
       setSemester("");
       setCourseNo("");
       setShowUploadForm(false);
@@ -201,20 +216,10 @@ const ImportantLinks = () => {
     }
   };
 
-  // Sort links by semester
-  const sortedLinks = [...importantLinks].sort((a, b) => {
-    const semesterA = a.semester || "";
-    const semesterB = b.semester || "";
-    if (sortOrder === "asc") {
-      return semesterA.localeCompare(semesterB);
-    }
-    return semesterB.localeCompare(semesterA);
-  });
-
   return (
     <>
       <Background />
-      <div className="min-h-screen bg-black/60 backdrop-blur-sm flex flex-col p-4 sm:p-6 pt-16 pl-16">
+      <div className="min-h-screen bg-black/60 backdrop-blur-sm flex flex-col p-4 sm:p-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -252,6 +257,18 @@ const ImportantLinks = () => {
                 <FaLink className="mr-2" />
                 Important Links
               </h2>
+              {currentUser && (
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowUploadForm(!showUploadForm)}
+                  className="mt-4 p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm sm:text-base hover:from-blue-700 hover:to-purple-700 transition-all flex items-center"
+                  aria-label="Toggle Upload Form"
+                >
+                  <FaUpload className="mr-2" />
+                  {showUploadForm ? "Cancel" : "Upload Link"}
+                </motion.button>
+              )}
               <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full">
                 <div className="flex-1">
                   <label
@@ -266,6 +283,7 @@ const ImportantLinks = () => {
                     value={semester}
                     onChange={e => setSemester(e.target.value)}
                     className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                    aria-label="Select semester"
                   >
                     <option value="">All Semesters</option>
                     {semesters.map(sem => (
@@ -290,49 +308,10 @@ const ImportantLinks = () => {
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Search by title or course..."
                     className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400"
+                    aria-label="Search links"
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-2 mt-4">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSortOrder("asc")}
-                  className={`p-2 rounded-lg text-sm ${
-                    sortOrder === "asc"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-700 text-gray-200"
-                  } hover:bg-blue-700 transition-all flex items-center`}
-                  aria-label="Sort ascending by semester"
-                >
-                  Sort Asc
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSortOrder("desc")}
-                  className={`p-2 rounded-lg text-sm ${
-                    sortOrder === "desc"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-700 text-gray-200"
-                  } hover:bg-blue-700 transition-all flex items-center`}
-                  aria-label="Sort descending by semester"
-                >
-                  Sort Desc
-                </motion.button>
-              </div>
-              {currentUser && (
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowUploadForm(!showUploadForm)}
-                  className="mt-4 p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm sm:text-base hover:from-blue-700 hover:to-purple-700 transition-all flex items-center"
-                  aria-label="Toggle Upload Form"
-                >
-                  <FaUpload className="mr-2" />
-                  {showUploadForm ? "Cancel" : "Upload Link"}
-                </motion.button>
-              )}
             </div>
             {showUploadForm && currentUser && (
               <motion.div
@@ -358,6 +337,7 @@ const ImportantLinks = () => {
                       required
                       className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400"
                       placeholder="Enter link title"
+                      aria-label="Link title"
                     />
                   </div>
                   <div>
@@ -372,9 +352,11 @@ const ImportantLinks = () => {
                       id="semester"
                       value={semester}
                       onChange={e => setSemester(e.target.value)}
+                      required
                       className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                      aria-label="Select semester"
                     >
-                      <option value="">Select Semester (Optional)</option>
+                      <option value="">Select Semester</option>
                       {semesters.map(sem => (
                         <option key={sem} value={sem}>
                           {sem}
@@ -397,7 +379,61 @@ const ImportantLinks = () => {
                       onChange={e => setCourseNo(e.target.value)}
                       className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400"
                       placeholder="e.g., ECE101 (Optional)"
+                      aria-label="Course number"
                     />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="fileType"
+                      className="block text-sm font-medium text-gray-200 flex items-center"
+                    >
+                      <FaLink className="mr-2" />
+                      File Type (for URL uploads)
+                    </label>
+                    <select
+                      id="fileType"
+                      value={fileType}
+                      onChange={e => setFileType(e.target.value)}
+                      disabled={file}
+                      className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition disabled:opacity-50"
+                      aria-label="Select file type"
+                    >
+                      <option value="pdf" className="bg-gray-800">
+                        PDF
+                      </option>
+                      <option value="ppt" className="bg-gray-800">
+                        PowerPoint (PPT)
+                      </option>
+                      <option value="pptx" className="bg-gray-800">
+                        PowerPoint (PPTX)
+                      </option>
+                      <option value="doc" className="bg-gray-800">
+                        Word (DOC)
+                      </option>
+                      <option value="docx" className="bg-gray-800">
+                        Word (DOCX)
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="file"
+                      className="block text-sm font-medium text-gray-200 flex items-center"
+                    >
+                      <FaLink className="mr-2" />
+                      Upload File
+                    </label>
+                    <input
+                      type="file"
+                      id="file"
+                      onChange={e => setFile(e.target.files[0])}
+                      className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                      accept=".pdf,.ppt,.pptx,.doc,.docx"
+                      aria-label="Upload file"
+                    />
+                    <p className="mt-1 text-xs sm:text-sm text-gray-400">
+                      Upload a file or provide a Google Drive URL below.
+                    </p>
                   </div>
                   <div>
                     <label
@@ -412,9 +448,10 @@ const ImportantLinks = () => {
                       id="fileUrl"
                       value={fileUrl}
                       onChange={e => setFileUrl(e.target.value)}
-                      required
-                      className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400"
+                      disabled={file}
+                      className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400 disabled:opacity-50"
                       placeholder="https://drive.google.com/file/d/..."
+                      aria-label="Google Drive URL"
                     />
                     <p className="mt-1 text-xs sm:text-sm text-gray-400">
                       Ensure the Google Drive link is publicly accessible or
@@ -427,6 +464,7 @@ const ImportantLinks = () => {
                     whileTap={{ scale: 0.95 }}
                     disabled={loading}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 sm:p-3 rounded-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900 transition disabled:opacity-50 disabled:hover:from-blue-600 disabled:hover:to-purple-600 flex items-center justify-center"
+                    aria-label="Upload link"
                   >
                     {loading ? (
                       <span className="flex items-center">
@@ -443,7 +481,7 @@ const ImportantLinks = () => {
                 </form>
               </motion.div>
             )}
-            {loading && !sortedLinks.length ? (
+            {loading && !importantLinks.length ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -454,13 +492,13 @@ const ImportantLinks = () => {
                   Loading links...
                 </p>
               </motion.div>
-            ) : sortedLinks.length === 0 ? (
+            ) : importantLinks.length === 0 ? (
               <p className="text-gray-400 text-center text-sm sm:text-base flex items-center justify-center">
                 <FaLink className="mr-2" />
                 No important links available.
               </p>
             ) : (
-              sortedLinks.map(link => (
+              importantLinks.map(link => (
                 <motion.div
                   key={link._id}
                   initial={{ opacity: 0, scale: 0.98 }}

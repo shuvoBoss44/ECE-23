@@ -23,8 +23,6 @@ const Profile = ({
   const [notesLoading, setNotesLoading] = useState(true);
   const [error, setError] = useState("");
   const [notesError, setNotesError] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc"); // asc or desc for semester sorting
-
   const { ref: inViewRef, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -96,19 +94,15 @@ const Profile = ({
     fetchNotes();
   }, [student?._id]);
 
-  // Sort notes by semester
+  // Sort notes by semester (ascending, missing semesters at the end)
   const sortedNotes = [...notes].sort((a, b) => {
     const semesterA = a.semester || "";
     const semesterB = b.semester || "";
-    if (sortOrder === "asc") {
-      return semesterA.localeCompare(semesterB);
-    }
-    return semesterB.localeCompare(semesterA);
+    if (!semesterA && !semesterB) return 0;
+    if (!semesterA) return 1; // Missing semesters at the end
+    if (!semesterB) return -1;
+    return semesterA.localeCompare(semesterB);
   });
-
-  const handleSortChange = order => {
-    setSortOrder(order);
-  };
 
   const handleImageLoad = () => {
     setTimeout(() => setIsImageLoaded(true), 300);
@@ -141,7 +135,7 @@ const Profile = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-white text-lg font-semibold">Loading...</p>
@@ -152,7 +146,7 @@ const Profile = ({
 
   if (error || !student) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 flex items-center justify-center">
         <div className="text-center text-red-500 text-lg font-semibold py-8">
           {error || "Student not found!"}
         </div>
@@ -167,7 +161,7 @@ const Profile = ({
   return (
     <>
       <Background />
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900 pt-16">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-gray-800 to-blue-900">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -278,37 +272,9 @@ const Profile = ({
                 transition={{ delay: 0.8, duration: 0.5 }}
                 className="bg-gray-800/70 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/20 transition-shadow duration-300"
               >
-                <div className="flex justify-between items-center mb-3">
-                  <h2 className="text-xl sm:text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                    Shared Notes
-                  </h2>
-                  <div className="flex gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleSortChange("asc")}
-                      className={`px-3 py-1 rounded-lg text-sm ${
-                        sortOrder === "asc"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-700 text-gray-200"
-                      } hover:bg-blue-700 transition-all`}
-                    >
-                      Sort Asc
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleSortChange("desc")}
-                      className={`px-3 py-1 rounded-lg text-sm ${
-                        sortOrder === "desc"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-700 text-gray-200"
-                      } hover:bg-blue-700 transition-all`}
-                    >
-                      Sort Desc
-                    </motion.button>
-                  </div>
-                </div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 mb-3">
+                  Shared Notes
+                </h2>
                 {notesLoading ? (
                   <div className="flex items-center justify-center py-4">
                     <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -347,6 +313,7 @@ const Profile = ({
                           className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition"
                           whileHover={{ scale: 1.2, rotate: 10 }}
                           whileTap={{ scale: 0.9 }}
+                          aria-label={`Preview ${note.title}`}
                         >
                           <FaFilePdf className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                         </motion.a>
@@ -380,6 +347,7 @@ const Profile = ({
                         className="p-2 sm:p-3 bg-blue-600 rounded-full hover:bg-blue-700 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
+                        aria-label="Facebook profile"
                       >
                         <FaFacebook className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                       </motion.a>
@@ -390,6 +358,7 @@ const Profile = ({
                         className="p-2 sm:p-3 bg-green-600 rounded-full hover:bg-green-700 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
+                        aria-label="Phone number"
                       >
                         <FaPhone className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                       </motion.a>
@@ -402,6 +371,7 @@ const Profile = ({
                         className="p-2 sm:p-3 bg-pink-600 rounded-full hover:bg-pink-700 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
+                        aria-label="Instagram profile"
                       >
                         <FaInstagram className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                       </motion.a>
@@ -414,6 +384,7 @@ const Profile = ({
                         className="p-2 sm:p-3 bg-green-500 rounded-full hover:bg-green-600 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
+                        aria-label="WhatsApp contact"
                       >
                         <FaWhatsapp className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                       </motion.a>
