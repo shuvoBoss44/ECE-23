@@ -306,14 +306,14 @@ const Profile = ({
                           </p>
                         </div>
                         <motion.a
-                          href={getGoogleDriveFileUrl(note.file) || "#"}
+                          href={getGoogleDriveFileUrl(note.fileUrl) || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition relative group"
                           whileHover={{ scale: 1.2, rotate: 10 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={e => {
-                            const url = getGoogleDriveFileUrl(note.file);
+                            const url = getGoogleDriveFileUrl(note.fileUrl);
                             if (!url) {
                               e.preventDefault();
                               console.error(
