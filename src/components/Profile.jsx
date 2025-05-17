@@ -99,6 +99,12 @@ const Profile = ({
   const handleImageLoad = () => {
     setTimeout(() => setIsImageLoaded(true), 300);
   };
+  const getGoogleDrivePreviewUrl = url => {
+    const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (!fileIdMatch) return url;
+    const fileId = fileIdMatch[1];
+    return `https://drive.google.com/file/d/${fileId}/preview`;
+  };
 
   const handleImageError = e => {
     e.target.src = placeholderImage;
@@ -293,31 +299,32 @@ const Profile = ({
                           </p>
                         </div>
                         <motion.a
-                          href={note.pdf}
+                          href={getGoogleDrivePreviewUrl(note.file)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition relative group"
                           whileHover={{ scale: 1.2, rotate: 10 }}
                           whileTap={{ scale: 0.9 }}
-                          onClick={() => {
-                            if (!note.pdf) {
+                          onClick={e => {
+                            const url = getGoogleDrivePreviewUrl(note.file);
+                            if (!url || !url.includes("drive.google.com")) {
+                              e.preventDefault();
                               console.error(
-                                "Invalid PDF URL for note:",
-                                note._id
+                                "Invalid Google Drive URL for note:",
+                                note._id,
+                                note.file
                               );
                               alert(
-                                "Unable to open PDF. Please try again later."
+                                "Unable to open PDF. The file URL is invalid."
                               );
                             }
                           }}
-                          title="Open PDF"
+                          aria-label={`Preview ${note.title}`}
+                          title="Preview PDF"
                         >
-                          <FaFilePdf
-                            className="text-white w-4 h-4 sm:w-5 sm:h-5"
-                            aria-label={`Open PDF for ${note.title}`}
-                          />
+                          <FaFilePdf className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                           <span className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 -top-8 left-1/2 transform -translate-x-1/2">
-                            Open PDF
+                            Preview PDF
                           </span>
                         </motion.a>
                       </motion.div>
