@@ -45,10 +45,10 @@ const ImportantLinks = () => {
         const queryParams = new URLSearchParams({
           page,
           limit: 10,
-          isImportantLink: true, // Filter for important links
+          isImportantLink: true,
         });
         const response = await fetch(
-          `https://ece-23-backend.onrender.com/api/notes?${queryParams}`, // Use /api/notes
+          `https://ece-23-backend.onrender.com/api/notes?${queryParams}`,
           {
             method: "GET",
             credentials: "include",
@@ -60,11 +60,7 @@ const ImportantLinks = () => {
             errorData.message || "Failed to fetch important links"
           );
         }
-        const {
-          notes: linksData, // Use notes from response
-          total,
-          pages,
-        } = await response.json();
+        const { notes: linksData, total, pages } = await response.json();
         setImportantLinks(linksData || []);
         setTotalPages(pages || 1);
       } catch (err) {
@@ -82,7 +78,7 @@ const ImportantLinks = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `https://ece-23-backend.onrender.com/api/notes/${linkId}`, // Use /api/notes/:id
+          `https://ece-23-backend.onrender.com/api/notes/${linkId}`,
           {
             method: "DELETE",
             credentials: "include",
@@ -129,9 +125,23 @@ const ImportantLinks = () => {
             transition={{ delay: 0.4, duration: 0.5 }}
             className="space-y-6"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center">
-              Important Links
-            </h2>
+            <div className="flex flex-col items-center">
+              <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center">
+                Important Links
+              </h2>
+              {currentUser?.canAnnounce && (
+                <Link to="/upload-important-links">
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="mt-4 p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm sm:text-base hover:from-blue-700 hover:to-purple-700 transition-all"
+                    aria-label="Upload Important Link"
+                  >
+                    Upload Important Link
+                  </motion.button>
+                </Link>
+              )}
+            </div>
             {loading && !importantLinks.length ? (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -159,7 +169,7 @@ const ImportantLinks = () => {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                     <div className="flex-1">
                       <a
-                        href={link.fileUrl} // Use fileUrl from Note schema
+                        href={link.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-lg sm:text-xl font-semibold text-blue-400 hover:text-blue-300 transition-colors"
@@ -172,7 +182,7 @@ const ImportantLinks = () => {
                       <p className="text-gray-400 mt-2 text-xs sm:text-sm">
                         Posted by:{" "}
                         <Link
-                          to={`/profile/${link.userId?.roll || "unknown"}`} // Use userId from Note schema
+                          to={`/profile/${link.userId?.roll || "unknown"}`}
                           className="text-blue-400 hover:text-blue-300 transition-colors"
                         >
                           {link.userId?.name || "Unknown"} (
