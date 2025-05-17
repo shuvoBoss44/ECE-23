@@ -148,6 +148,17 @@ const Profile = ({
           transition={{ duration: 0.6 }}
           className="flex-grow p-3 sm:p-6 md:p-8 pt-3"
         >
+          {/* Back Button */}
+          <motion.button
+            onClick={handleBack}
+            className="mb-4 p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            aria-label="Go back"
+          >
+            <FaArrowLeft className="text-white w-5 h-5" />
+          </motion.button>
+
           <div className="max-w-4xl mx-auto bg-gray-900/85 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-blue-500/20">
             {/* Cover Photo */}
             <div className="relative h-48 sm:h-60 md:h-72 bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500">
@@ -285,11 +296,29 @@ const Profile = ({
                           href={note.pdf}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition"
+                          className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition relative group"
                           whileHover={{ scale: 1.2, rotate: 10 }}
                           whileTap={{ scale: 0.9 }}
+                          onClick={() => {
+                            if (!note.pdf) {
+                              console.error(
+                                "Invalid PDF URL for note:",
+                                note._id
+                              );
+                              alert(
+                                "Unable to open PDF. Please try again later."
+                              );
+                            }
+                          }}
+                          title="Open PDF"
                         >
-                          <FaFilePdf className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                          <FaFilePdf
+                            className="text-white w-4 h-4 sm:w-5 sm:h-5"
+                            aria-label={`Open PDF for ${note.title}`}
+                          />
+                          <span className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 -top-8 left-1/2 transform -translate-x-1/2">
+                            Open PDF
+                          </span>
                         </motion.a>
                       </motion.div>
                     ))}
@@ -318,7 +347,7 @@ const Profile = ({
                         href={facebook}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 sm:p-3 bg-blue-600 rounded-full hover:bg-blue-700 transition"
+                        className="p-2 sm W:p-3 bg-blue-600 rounded-full hover:bg-blue-700 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
                       >
@@ -339,7 +368,8 @@ const Profile = ({
                       <motion.a
                         href={instagram}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel="noopener noreferr
+er"
                         className="p-2 sm:p-3 bg-pink-600 rounded-full hover:bg-pink-700 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
@@ -381,7 +411,7 @@ const Profile = ({
               </a>
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              All rights Windows reserved by ECE-23
+              All rights reserved by ECE-23
             </p>
           </div>
         </footer>
