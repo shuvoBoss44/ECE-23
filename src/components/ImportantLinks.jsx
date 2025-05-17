@@ -417,26 +417,6 @@ const ImportantLinks = () => {
                   </div>
                   <div>
                     <label
-                      htmlFor="file"
-                      className="block text-sm font-medium text-gray-200 flex items-center"
-                    >
-                      <FaLink className="mr-2" />
-                      Upload File
-                    </label>
-                    <input
-                      type="file"
-                      id="file"
-                      onChange={e => setFile(e.target.files[0])}
-                      className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
-                      accept=".pdf,.ppt,.pptx,.doc,.docx"
-                      aria-label="Upload file"
-                    />
-                    <p className="mt-1 text-xs sm:text-sm text-gray-400">
-                      Upload a file or provide a Google Drive URL below.
-                    </p>
-                  </div>
-                  <div>
-                    <label
                       htmlFor="fileUrl"
                       className="block text-sm font-medium text-gray-200 flex items-center"
                     >

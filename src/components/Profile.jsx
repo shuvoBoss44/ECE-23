@@ -1,5 +1,12 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { FaFacebook, FaPhone, FaInstagram, FaWhatsapp } from "react-icons/fa";
+import {
+  FaFacebook,
+  FaPhone,
+  FaInstagram,
+  FaWhatsapp,
+  FaArrowLeft,
+  FaFilePdf,
+} from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useEffect, useState } from "react";
@@ -17,7 +24,7 @@ const Profile = ({
   const [notesLoading, setNotesLoading] = useState(true);
   const [error, setError] = useState("");
   const [notesError, setNotesError] = useState("");
-  const [selectedSemester, setSelectedSemester] = useState("All Semesters");
+
   const { ref: inViewRef, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -89,32 +96,6 @@ const Profile = ({
     fetchNotes();
   }, [student?._id]);
 
-  // Function to sort notes by semester (ascending, missing semesters at the end)
-  const sortNotesBySemester = notesArray => {
-    return [...notesArray].sort((a, b) => {
-      const semesterA = a.semester?.trim() || "";
-      const semesterB = b.semester?.trim() || "";
-      if (!semesterA && !semesterB) return 0;
-      if (!semesterA) return 1;
-      if (!semesterB) return -1;
-      return semesterA.localeCompare(semesterB, undefined, { numeric: true });
-    });
-  };
-
-  // Get unique semesters for dropdown
-  const uniqueSemesters = [
-    "All Semesters",
-    ...new Set(notes.map(note => note.semester?.trim()).filter(Boolean)),
-  ];
-
-  // Filter and sort notes
-  const filteredNotes =
-    selectedSemester === "All Semesters"
-      ? sortNotesBySemester(notes)
-      : sortNotesBySemester(
-          notes.filter(note => note.semester?.trim() === selectedSemester)
-        );
-
   const handleImageLoad = () => {
     setTimeout(() => setIsImageLoaded(true), 300);
   };
@@ -122,6 +103,14 @@ const Profile = ({
   const handleImageError = e => {
     e.target.src = placeholderImage;
     setTimeout(() => setIsImageLoaded(true), 300);
+  };
+
+  const handleBack = () => {
+    if (location.state?.from === "home" && location.state?.cardId) {
+      navigate("/", { state: { cardId: location.state.cardId } });
+    } else {
+      navigate(-1);
+    }
   };
 
   if (loading) {
@@ -157,8 +146,24 @@ const Profile = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-grow p-3 sm:p-6 md:p-8"
+          className="flex-grow p-3 sm:p-6 md:p-8 pt-3"
         >
+          {/* Back Button at Top */}
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleBack}
+            className="mb-4 p-2 sm:p-3 bg-blue-500/80 rounded-full hover:bg-blue-600 transition-all backdrop-blur-sm flex items-center gap-2"
+          >
+            <FaArrowLeft className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-white text-xs sm:text-sm font-medium">
+              Back
+            </span>
+          </motion.button>
+
           <div className="max-w-4xl mx-auto bg-gray-900/85 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-blue-500/20">
             {/* Cover Photo */}
             <div className="relative h-48 sm:h-60 md:h-72 bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500">
@@ -173,7 +178,7 @@ const Profile = ({
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.6 }}
-                  className="absolute top-4 left-1/2 transform miscellaneous-x-1/2 w-11/12 sm:w-3/4 text-center text-white text-base sm:text-lg md:text-xl font-serif italic drop-shadow-lg px-3"
+                  className="absolute top-4 left-1/2 transform -translate-x-1/2 w-11/12 sm:w-3/4 text-center text-white text-base sm:text-lg md:text-xl font-serif italic drop-shadow-lg px-3"
                 >
                   <span className="text-blue-200">“</span>
                   {quote}
@@ -263,33 +268,9 @@ const Profile = ({
                 transition={{ delay: 0.8, duration: 0.5 }}
                 className="bg-gray-800/70 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/20 transition-shadow duration-300"
               >
-                <h2 className="text-xl sm:text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 mb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
                   Shared Notes
                 </h2>
-                <div className="mb-4">
-                  <label
-                    htmlFor="semesterFilter"
-                    className="block text-sm font-medium text-gray-200 mb-1"
-                  >
-                    Filter by Semester
-                  </label>
-                  <select
-                    id="semesterFilter"
-                    value={selectedSemester}
-                    onChange={e => setSelectedSemester(e.target.value)}
-                    className="w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
-                  >
-                    {uniqueSemesters.map(semester => (
-                      <option
-                        key={semester}
-                        value={semester}
-                        className="bg-gray-800"
-                      >
-                        {semester}
-                      </option>
-                    ))}
-                  </select>
-                </div>
                 {notesLoading ? (
                   <div className="flex items-center justify-center py-4">
                     <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -298,9 +279,9 @@ const Profile = ({
                   <p className="text-red-400 text-center text-sm sm:text-base">
                     {notesError}
                   </p>
-                ) : filteredNotes.length > 0 ? (
+                ) : notes.length > 0 ? (
                   <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
-                    {filteredNotes.map(note => (
+                    {notes.map(note => (
                       <motion.div
                         key={note._id}
                         initial={{ opacity: 0, x: -10 }}
@@ -313,16 +294,25 @@ const Profile = ({
                             {note.title}
                           </p>
                           <p className="text-gray-300 text-xs sm:text-sm">
-                            Semester: {note.semester || "N/A"} | Course:{" "}
-                            {note.courseNo || "N/A"}
+                            Semester: {note.semester} | Course: {note.courseNo}
                           </p>
                         </div>
+                        <motion.a
+                          href={note.pdf}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition"
+                          whileHover={{ scale: 1.2, rotate: 10 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <FaFilePdf className="text-white w-4 h-4 sm:w-5 sm:h-5" />
+                        </motion.a>
                       </motion.div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-gray-400 text-center text-sm sm:text-base">
-                    No notes available for the selected semester.
+                    No notes shared yet.
                   </p>
                 )}
               </motion.div>
@@ -347,7 +337,6 @@ const Profile = ({
                         className="p-2 sm:p-3 bg-blue-600 rounded-full hover:bg-blue-700 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
-                        aria-label="Facebook profile"
                       >
                         <FaFacebook className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                       </motion.a>
@@ -358,7 +347,6 @@ const Profile = ({
                         className="p-2 sm:p-3 bg-green-600 rounded-full hover:bg-green-700 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
-                        aria-label="Phone number"
                       >
                         <FaPhone className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                       </motion.a>
@@ -371,7 +359,6 @@ const Profile = ({
                         className="p-2 sm:p-3 bg-pink-600 rounded-full hover:bg-pink-700 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
-                        aria-label="Instagram profile"
                       >
                         <FaInstagram className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                       </motion.a>
@@ -384,7 +371,6 @@ const Profile = ({
                         className="p-2 sm:p-3 bg-green-500 rounded-full hover:bg-green-600 transition"
                         whileHover={{ scale: 1.2, rotate: 10 }}
                         whileTap={{ scale: 0.9 }}
-                        aria-label="WhatsApp contact"
                       >
                         <FaWhatsapp className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                       </motion.a>
@@ -411,7 +397,7 @@ const Profile = ({
               </a>
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              All rights reserved by ECE-23
+              All rights Windows reserved by ECE-23
             </p>
           </div>
         </footer>
