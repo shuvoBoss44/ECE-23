@@ -45,9 +45,10 @@ const ImportantLinks = () => {
         const queryParams = new URLSearchParams({
           page,
           limit: 10,
+          isImportantLink: true, // Filter for important links
         });
         const response = await fetch(
-          `https://ece-23-backend.onrender.com/api/important-links?${queryParams}`,
+          `https://ece-23-backend.onrender.com/api/notes?${queryParams}`, // Use /api/notes
           {
             method: "GET",
             credentials: "include",
@@ -60,7 +61,7 @@ const ImportantLinks = () => {
           );
         }
         const {
-          importantLinks: linksData,
+          notes: linksData, // Use notes from response
           total,
           pages,
         } = await response.json();
@@ -81,7 +82,7 @@ const ImportantLinks = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `https://ece-23-backend.onrender.com/api/important-links/${linkId}`,
+          `https://ece-23-backend.onrender.com/api/notes/${linkId}`, // Use /api/notes/:id
           {
             method: "DELETE",
             credentials: "include",
@@ -158,7 +159,7 @@ const ImportantLinks = () => {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                     <div className="flex-1">
                       <a
-                        href={link.url}
+                        href={link.fileUrl} // Use fileUrl from Note schema
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-lg sm:text-xl font-semibold text-blue-400 hover:text-blue-300 transition-colors"
@@ -166,16 +167,16 @@ const ImportantLinks = () => {
                         {link.title}
                       </a>
                       <p className="text-gray-300 mt-2 text-sm sm:text-base">
-                        {link.description}
+                        File Type: {link.fileType.toUpperCase()}
                       </p>
                       <p className="text-gray-400 mt-2 text-xs sm:text-sm">
                         Posted by:{" "}
                         <Link
-                          to={`/profile/${link.creator?.roll || "unknown"}`}
+                          to={`/profile/${link.userId?.roll || "unknown"}`} // Use userId from Note schema
                           className="text-blue-400 hover:text-blue-300 transition-colors"
                         >
-                          {link.creator?.name || "Unknown"} (
-                          {link.creator?.roll || "N/A"})
+                          {link.userId?.name || "Unknown"} (
+                          {link.userId?.roll || "N/A"})
                         </Link>
                       </p>
                       <p className="text-gray-400 text-xs sm:text-sm">
@@ -188,7 +189,7 @@ const ImportantLinks = () => {
                         </p>
                       )}
                     </div>
-                    {currentUser?._id === link.creator?._id && (
+                    {currentUser?._id === link.userId?._id && (
                       <motion.button
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.95 }}
