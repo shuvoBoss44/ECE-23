@@ -16,14 +16,11 @@ import NoteUploadPage from "./components/NoteUploadPage";
 import ChangePassword from "./components/ChangePassword";
 import Announcements from "./components/Announcements";
 import ImportantLinks from "./components/ImportantLinks";
-import UploadImportantLinks from "./components/UploadImportantLinks";
 
-// User Context to cache authentication and user data
 const UserContext = createContext();
 
 export const useUser = () => useContext(UserContext);
 
-// PrivateRoute component to protect routes requiring authentication
 const PrivateRoute = ({ children, isAuthenticated, setIsAuthenticated }) => {
   const { user, setUser } = useUser();
 
@@ -40,7 +37,7 @@ const PrivateRoute = ({ children, isAuthenticated, setIsAuthenticated }) => {
         if (response.status === 429 && retries > 0) {
           console.warn(`Rate limit hit, retrying after ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
-          return checkAuth(retries - 1, delay * 2); // Exponential backoff
+          return checkAuth(retries - 1, delay * 2);
         }
         if (response.ok) {
           const userData = await response.json();
@@ -62,7 +59,7 @@ const PrivateRoute = ({ children, isAuthenticated, setIsAuthenticated }) => {
   }, [isAuthenticated, setIsAuthenticated, setUser]);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>; // Or a spinner
+    return <div>Loading...</div>;
   }
 
   return isAuthenticated ? children : <Navigate to="/login" />;
@@ -73,7 +70,6 @@ const Root = () => {
   const [user, setUser] = useState(null);
   const location = useLocation();
 
-  // Check authentication only on initial mount or logout
   useEffect(() => {
     const checkAuth = async (retries = 3, delay = 1000) => {
       try {
@@ -132,17 +128,6 @@ const Root = () => {
         />
         <Route path="/important-links" element={<ImportantLinks />} />
         <Route
-          path="/important-links/upload"
-          element={
-            <PrivateRoute
-              isAuthenticated={isAuthenticated}
-              setIsAuthenticated={setIsAuthenticated}
-            >
-              <UploadImportantLinks />
-            </PrivateRoute>
-          }
-        />
-        <Route
           path="/login"
           element={<Login setIsAuthenticated={setIsAuthenticated} />}
         />
@@ -163,7 +148,6 @@ const Root = () => {
   );
 };
 
-// Wrap Root with BrowserRouter
 const RootWithRouter = () => (
   <BrowserRouter>
     <Root />

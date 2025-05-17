@@ -15,9 +15,8 @@ import {
 const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [isLoadingUser, setIsLoadingUser] = useState(true); // Added for loading state
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
 
-  // Fetch current user to check canAnnounce status
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -68,7 +67,7 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
       <div className="fixed top-4 left-4 z-50">
         <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
       </div>
-    ); // Show loading spinner while fetching auth or user
+    );
   }
 
   const navLinks = [
@@ -101,15 +100,6 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
             label: "Upload Note",
             icon: <FaUpload className="text-xl" />,
           },
-          ...(currentUser?.canAnnounce
-            ? [
-                {
-                  to: "/important-links/upload",
-                  label: "Upload Important Link",
-                  icon: <FaUpload className="text-xl" />,
-                },
-              ]
-            : []),
           {
             to: "/change-password",
             label: "Change Password",
@@ -130,7 +120,6 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
 
   return (
     <>
-      {/* Toggle Button for Sidebar */}
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -156,8 +145,6 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
           />
         </svg>
       </motion.button>
-
-      {/* Sidebar */}
       <motion.div
         initial={{ width: window.innerWidth >= 768 ? 64 : 0 }}
         animate={{
@@ -166,7 +153,6 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className="fixed top-0 left-0 h-full bg-gradient-to-b from-gray-900 to-gray-950 backdrop-blur-lg border-r border-blue-500/20 z-40 flex flex-col shadow-xl"
       >
-        {/* Logo Section */}
         <div className="flex items-center justify-center h-20 border-b border-blue-500/20">
           <NavLink
             to="/"
@@ -183,8 +169,6 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
             </motion.div>
           </NavLink>
         </div>
-
-        {/* Navigation Links */}
         <div className="flex-1 overflow-y-auto">
           <div className="py-4 space-y-1">
             {navLinks.map(link => (
@@ -241,8 +225,6 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
           </div>
         </div>
       </motion.div>
-
-      {/* Overlay when sidebar is open */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: isSidebarOpen ? 0.5 : 0 }}
