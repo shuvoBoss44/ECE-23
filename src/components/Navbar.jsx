@@ -15,12 +15,10 @@ import {
 const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        setIsLoadingUser(true);
         const response = await fetch(
           "https://ece-23-backend.onrender.com/api/users/me",
           {
@@ -37,12 +35,10 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
       } catch (err) {
         setCurrentUser(null);
         console.error("User fetch error:", err);
-      } finally {
-        setIsLoadingUser(false);
       }
     };
     fetchCurrentUser();
-  }, [isAuthenticated]);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -51,6 +47,7 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
         credentials: "include",
       });
       setIsAuthenticated(false);
+      setCurrentUser(null);
       setIsSidebarOpen(false);
       window.location.href = "/";
     } catch (err) {
@@ -61,14 +58,6 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-
-  if (isAuthenticated === null || isLoadingUser) {
-    return (
-      <div className="fixed top-4 left-4 z-50">
-        <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   const navLinks = [
     { to: "/", label: "Home", icon: <FaHome className="text-xl" /> },
@@ -100,15 +89,21 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
             label: "Upload Note",
             icon: <FaUpload className="text-xl" />,
           },
+          ...(currentUser?.canAnnounce
+            ? [
+                {
+                  to: "/upload-important-links",
+                  label: "Upload Important Link",
+                  icon: <FaUpload className="text-xl" />,
+                },
+              ]
+            : []),
           {
             to: "/change-password",
             label: "Change Password",
             icon: <FaLock className="text-xl" />,
           },
         ]
-      : []),
-    ...(isAuthenticated
-      ? []
       : [
           {
             to: "/login",
