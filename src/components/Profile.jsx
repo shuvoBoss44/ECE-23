@@ -1,11 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import {
-  FaFacebook,
-  FaPhone,
-  FaInstagram,
-  FaWhatsapp,
-  FaFilePdf,
-} from "react-icons/fa";
+import { FaFacebook, FaPhone, FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useEffect, useState } from "react";
@@ -23,6 +17,7 @@ const Profile = ({
   const [notesLoading, setNotesLoading] = useState(true);
   const [error, setError] = useState("");
   const [notesError, setNotesError] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("All Semesters");
   const { ref: inViewRef, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -99,18 +94,26 @@ const Profile = ({
     return [...notesArray].sort((a, b) => {
       const semesterA = a.semester?.trim() || "";
       const semesterB = b.semester?.trim() || "";
-      // If both semesters are missing, maintain order
       if (!semesterA && !semesterB) return 0;
-      // Missing semesters go to the end
       if (!semesterA) return 1;
       if (!semesterB) return -1;
-      // Compare semesters alphabetically (e.g., "Semester 1" < "Semester 2")
       return semesterA.localeCompare(semesterB, undefined, { numeric: true });
     });
   };
 
-  // Sorted notes
-  const sortedNotes = sortNotesBySemester(notes);
+  // Get unique semesters for dropdown
+  const uniqueSemesters = [
+    "All Semesters",
+    ...new Set(notes.map(note => note.semester?.trim()).filter(Boolean)),
+  ];
+
+  // Filter and sort notes
+  const filteredNotes =
+    selectedSemester === "All Semesters"
+      ? sortNotesBySemester(notes)
+      : sortNotesBySemester(
+          notes.filter(note => note.semester?.trim() === selectedSemester)
+        );
 
   const handleImageLoad = () => {
     setTimeout(() => setIsImageLoaded(true), 300);
@@ -119,26 +122,6 @@ const Profile = ({
   const handleImageError = e => {
     e.target.src = placeholderImage;
     setTimeout(() => setIsImageLoaded(true), 300);
-  };
-
-  // Convert Google Drive URL to embeddable preview URL
-  const getGoogleDrivePreviewUrl = (url, fileType) => {
-    const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (!fileIdMatch) return url;
-    const fileId = fileIdMatch[1];
-    if (fileType?.toLowerCase() === "pdf") {
-      return `https://drive.google.com/file/d/${fileId}/preview`;
-    }
-    return `https://docs.google.com/gview?url=https://drive.google.com/uc?id=${fileId}&embedded=true`;
-  };
-
-  // Convert Google Drive URL to download URL
-  const getGoogleDriveDownloadUrl = url => {
-    const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (fileIdMatch) {
-      return `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}`;
-    }
-    return url;
   };
 
   if (loading) {
@@ -190,7 +173,7 @@ const Profile = ({
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.6 }}
-                  className="absolute top-4 left-1/2 transform -translate-x-1/2 w-11/12 sm:w-3/4 text-center text-white text-base sm:text-lg md:text-xl font-serif italic drop-shadow-lg px-3"
+                  className="absolute top-4 left-1/2 transform miscellaneous-x-1/2 w-11/12 sm:w-3/4 text-center text-white text-base sm:text-lg md:text-xl font-serif italic drop-shadow-lg px-3"
                 >
                   <span className="text-blue-200">“</span>
                   {quote}
@@ -283,6 +266,30 @@ const Profile = ({
                 <h2 className="text-xl sm:text-2xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 mb-3">
                   Shared Notes
                 </h2>
+                <div className="mb-4">
+                  <label
+                    htmlFor="semesterFilter"
+                    className="block text-sm font-medium text-gray-200 mb-1"
+                  >
+                    Filter by Semester
+                  </label>
+                  <select
+                    id="semesterFilter"
+                    value={selectedSemester}
+                    onChange={e => setSelectedSemester(e.target.value)}
+                    className="w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                  >
+                    {uniqueSemesters.map(semester => (
+                      <option
+                        key={semester}
+                        value={semester}
+                        className="bg-gray-800"
+                      >
+                        {semester}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 {notesLoading ? (
                   <div className="flex items-center justify-center py-4">
                     <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -291,9 +298,9 @@ const Profile = ({
                   <p className="text-red-400 text-center text-sm sm:text-base">
                     {notesError}
                   </p>
-                ) : sortedNotes.length > 0 ? (
+                ) : filteredNotes.length > 0 ? (
                   <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
-                    {sortedNotes.map(note => (
+                    {filteredNotes.map(note => (
                       <motion.div
                         key={note._id}
                         initial={{ opacity: 0, x: -10 }}
@@ -315,7 +322,7 @@ const Profile = ({
                   </div>
                 ) : (
                   <p className="text-gray-400 text-center text-sm sm:text-base">
-                    No notes shared yet.
+                    No notes available for the selected semester.
                   </p>
                 )}
               </motion.div>
