@@ -7,8 +7,6 @@ const NoteUploadPage = () => {
   const [title, setTitle] = useState("");
   const [semester, setSemester] = useState("");
   const [courseNo, setCourseNo] = useState("");
-  const [fileUrl, setFileUrl] = useState("");
-  const [fileType, setFileType] = useState("pdf");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,16 +21,8 @@ const NoteUploadPage = () => {
     setSuccess("");
     setLoading(true);
 
-    if (!title || !semester || !courseNo || !fileUrl || !fileType) {
+    if (!title || !semester || !courseNo) {
       setError("All fields are required");
-      setLoading(false);
-      return;
-    }
-
-    const googleDriveRegex =
-      /^https:\/\/(drive\.google\.com\/file\/d\/|docs\.google\.com\/.*id=)[a-zA-Z0-9_-]+/;
-    if (!googleDriveRegex.test(fileUrl)) {
-      setError("Please provide a valid Google Drive URL");
       setLoading(false);
       return;
     }
@@ -43,8 +33,6 @@ const NoteUploadPage = () => {
       title,
       semester,
       courseNo: courseCode,
-      fileType,
-      fileUrl,
     };
 
     try {
@@ -71,8 +59,6 @@ const NoteUploadPage = () => {
       setTitle("");
       setSemester("");
       setCourseNo("");
-      setFileUrl("");
-      setFileType("pdf");
     } catch (err) {
       console.error("Upload error:", err);
       setError(err.message || "Failed to upload note. Please try again.");
@@ -192,58 +178,6 @@ const NoteUploadPage = () => {
                       </option>
                     ))}
               </select>
-            </div>
-            <div>
-              <label
-                htmlFor="fileType"
-                className="block text-sm font-medium text-gray-200"
-              >
-                File Type
-              </label>
-              <select
-                id="fileType"
-                value={fileType}
-                onChange={e => setFileType(e.target.value)}
-                required
-                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
-              >
-                <option value="pdf" className="bg-gray-800">
-                  PDF
-                </option>
-                <option value="ppt" className="bg-gray-800">
-                  PowerPoint (PPT)
-                </option>
-                <option value="pptx" className="bg-gray-800">
-                  PowerPoint (PPTX)
-                </option>
-                <option value="doc" className="bg-gray-800">
-                  Word (DOC)
-                </option>
-                <option value="docx" className="bg-gray-800">
-                  Word (DOCX)
-                </option>
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="fileUrl"
-                className="block text-sm font-medium text-gray-200"
-              >
-                Google Drive URL
-              </label>
-              <input
-                type="url"
-                id="fileUrl"
-                value={fileUrl}
-                onChange={e => setFileUrl(e.target.value)}
-                required
-                className="mt-1 w-full p-2 sm:p-3 bg-gray-800/50 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400"
-                placeholder="https://drive.google.com/file/d/..."
-              />
-              <p className="mt-1 text-xs sm:text-sm text-gray-400">
-                Ensure the Google Drive link is publicly accessible or shared
-                with view permissions.
-              </p>
             </div>
             <motion.button
               type="submit"

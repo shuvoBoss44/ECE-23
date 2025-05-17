@@ -94,15 +94,23 @@ const Profile = ({
     fetchNotes();
   }, [student?._id]);
 
-  // Sort notes by semester (ascending, missing semesters at the end)
-  const sortedNotes = [...notes].sort((a, b) => {
-    const semesterA = a.semester || "";
-    const semesterB = b.semester || "";
-    if (!semesterA && !semesterB) return 0;
-    if (!semesterA) return 1; // Missing semesters at the end
-    if (!semesterB) return -1;
-    return semesterA.localeCompare(semesterB);
-  });
+  // Function to sort notes by semester (ascending, missing semesters at the end)
+  const sortNotesBySemester = notesArray => {
+    return [...notesArray].sort((a, b) => {
+      const semesterA = a.semester?.trim() || "";
+      const semesterB = b.semester?.trim() || "";
+      // If both semesters are missing, maintain order
+      if (!semesterA && !semesterB) return 0;
+      // Missing semesters go to the end
+      if (!semesterA) return 1;
+      if (!semesterB) return -1;
+      // Compare semesters alphabetically (e.g., "Semester 1" < "Semester 2")
+      return semesterA.localeCompare(semesterB, undefined, { numeric: true });
+    });
+  };
+
+  // Sorted notes
+  const sortedNotes = sortNotesBySemester(notes);
 
   const handleImageLoad = () => {
     setTimeout(() => setIsImageLoaded(true), 300);
@@ -299,24 +307,9 @@ const Profile = ({
                           </p>
                           <p className="text-gray-300 text-xs sm:text-sm">
                             Semester: {note.semester || "N/A"} | Course:{" "}
-                            {note.courseNo || "N/A"} | Type:{" "}
-                            {note.fileType?.toUpperCase() || "Unknown"}
+                            {note.courseNo || "N/A"}
                           </p>
                         </div>
-                        <motion.a
-                          href={getGoogleDrivePreviewUrl(
-                            note.fileUrl,
-                            note.fileType
-                          )}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition"
-                          whileHover={{ scale: 1.2, rotate: 10 }}
-                          whileTap={{ scale: 0.9 }}
-                          aria-label={`Preview ${note.title}`}
-                        >
-                          <FaFilePdf className="text-white w-4 h-4 sm:w-5 sm:h-5" />
-                        </motion.a>
                       </motion.div>
                     ))}
                   </div>
