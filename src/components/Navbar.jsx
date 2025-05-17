@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -11,49 +11,28 @@ import {
   FaSignInAlt,
   FaSignOutAlt,
 } from "react-icons/fa";
+import { useUser } from "./RootWithRouter"; // Import useUser from RootWithRouter
 
 const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isLoadingUser, setIsLoadingUser] = useState(true); // Added for loading state
-
-  // Fetch current user to check canAnnounce status
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        setIsLoadingUser(true);
-        const response = await fetch(
-          "https://ece-23-backend.onrender.com/api/users/me",
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-        if (response.ok) {
-          const userData = await response.json();
-          setCurrentUser(userData);
-        } else {
-          setCurrentUser(null);
-        }
-      } catch (err) {
-        setCurrentUser(null);
-        console.error("User fetch error:", err);
-      } finally {
-        setIsLoadingUser(false);
-      }
-    };
-    fetchCurrentUser();
-  }, [isAuthenticated]);
+  const { user } = useUser(); // Use cached user data
 
   const handleLogout = async () => {
     try {
-      await fetch("https://ece-23-backend.onrender.com/api/users/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      setIsAuthenticated(false);
-      setIsSidebarOpen(false);
-      window.location.href = "/";
+      const response = await fetch(
+        "https://ece-23-backend.onrender.com/api/users/logout",
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        setIsAuthenticated(false);
+        setIsSidebarOpen(false);
+        window.location.href = "/";
+      } else {
+        console.error("Logout failed:", response.statusText);
+      }
     } catch (err) {
       console.error("Logout failed:", err);
     }
@@ -63,12 +42,12 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  if (isAuthenticated === null || isLoadingUser) {
+  if (isAuthenticated === null) {
     return (
       <div className="fixed top-4 left-4 z-50">
         <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
       </div>
-    ); // Show loading spinner while fetching auth or user
+    );
   }
 
   const navLinks = [
@@ -101,7 +80,7 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
             label: "Upload Note",
             icon: <FaUpload className="text-xl" />,
           },
-          ...(currentUser?.canAnnounce
+          ...(user?.canAnnounce
             ? [
                 {
                   to: "/important-links/upload",

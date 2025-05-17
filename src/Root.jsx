@@ -5,7 +5,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import App from "./App";
 import IntroGenerator from "./components/IntroGenerator";
 import Navbar from "./components/Navbar";
@@ -18,10 +18,17 @@ import Announcements from "./components/Announcements";
 import ImportantLinks from "./components/ImportantLinks";
 import UploadImportantLinks from "./components/UploadImportantLinks";
 
+// User Context to cache authentication and user data
+const UserContext = createContext();
+
+export const useUser = () => useContext(UserContext);
+
 // PrivateRoute component to protect routes requiring authentication
 const PrivateRoute = ({ children, isAuthenticated, setIsAuthenticated }) => {
+  const { user, setUser } = useUser();
+
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = async (retries = 3, delay = 1000) => {
       try {
         const response = await fetch(
           "https://ece-23-backend.onrender.com/api/users/me",
@@ -30,17 +37,32 @@ const PrivateRoute = ({ children, isAuthenticated, setIsAuthenticated }) => {
             credentials: "include",
           }
         );
-        setIsAuthenticated(response.ok);
+        if (response.status === 429 && retries > 0) {
+          console.warn(`Rate limit hit, retrying after ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return checkAuth(retries - 1, delay * 2); // Exponential backoff
+        }
+        if (response.ok) {
+          const userData = await response.json();
+          setIsAuthenticated(true);
+          setUser(userData);
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+        }
       } catch (err) {
         console.error("Auth check failed:", err);
         setIsAuthenticated(false);
+        setUser(null);
       }
     };
-    checkAuth();
-  }, [setIsAuthenticated]);
+    if (isAuthenticated === null || !user) {
+      checkAuth();
+    }
+  }, [isAuthenticated, setIsAuthenticated, setUser]);
 
   if (isAuthenticated === null) {
-    return null; // Or a loading spinner
+    return <div>Loading...</div>; // Or a spinner
   }
 
   return isAuthenticated ? children : <Navigate to="/login" />;
@@ -48,11 +70,12 @@ const PrivateRoute = ({ children, isAuthenticated, setIsAuthenticated }) => {
 
 const Root = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const location = useLocation(); // Track route changes
+  const [user, setUser] = useState(null);
+  const location = useLocation();
 
-  // Check authentication on mount and route change
+  // Check authentication only on initial mount or logout
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = async (retries = 3, delay = 1000) => {
       try {
         const response = await fetch(
           "https://ece-23-backend.onrender.com/api/users/me",
@@ -61,17 +84,32 @@ const Root = () => {
             credentials: "include",
           }
         );
-        setIsAuthenticated(response.ok);
+        if (response.status === 429 && retries > 0) {
+          console.warn(`Rate limit hit, retrying after ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return checkAuth(retries - 1, delay * 2);
+        }
+        if (response.ok) {
+          const userData = await response.json();
+          setIsAuthenticated(true);
+          setUser(userData);
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+        }
       } catch (err) {
         console.error("Auth check failed:", err);
         setIsAuthenticated(false);
+        setUser(null);
       }
     };
-    checkAuth();
-  }, [location.pathname]); // Re-run on route change
+    if (isAuthenticated === null) {
+      checkAuth();
+    }
+  }, [isAuthenticated]);
 
   return (
-    <>
+    <UserContext.Provider value={{ user, setUser }}>
       <Navbar
         isAuthenticated={isAuthenticated}
         setIsAuthenticated={setIsAuthenticated}
@@ -121,7 +159,7 @@ const Root = () => {
         />
         <Route path="/announcements" element={<Announcements />} />
       </Routes>
-    </>
+    </UserContext.Provider>
   );
 };
 
