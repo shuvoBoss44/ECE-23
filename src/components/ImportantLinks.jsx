@@ -121,24 +121,23 @@ const ImportantLinks = () => {
     setLoading(true);
 
     if (!title || !semester || (!file && !fileUrl)) {
-      setError(
-        "Title, semester, and either a file or Google Drive URL are required"
-      );
+      setError("Title, semester, and either a file or URL are required");
       setLoading(false);
       return;
     }
 
     if (file && fileUrl) {
-      setError("Please provide either a file or a Google Drive URL, not both");
+      setError("Please provide either a file or a URL, not both");
       setLoading(false);
       return;
     }
 
     if (fileUrl) {
-      const googleDriveRegex =
-        /^https:\/\/(drive\.google\.com\/file\/d\/|docs\.google\.com\/.*id=)[a-zA-Z0-9_-]+/;
-      if (!googleDriveRegex.test(fileUrl)) {
-        setError("Please provide a valid Google Drive URL");
+      // Validate that the URL is properly formatted
+      try {
+        new URL(fileUrl);
+      } catch {
+        setError("Please provide a valid URL");
         setLoading(false);
         return;
       }
@@ -413,6 +412,15 @@ const ImportantLinks = () => {
                       <option value="docx" className="bg-gray-800">
                         Word (DOCX)
                       </option>
+                      <option value="youtube_playlist" className="bg-gray-800">
+                        YouTube Playlist
+                      </option>
+                      <option value="youtube_video" className="bg-gray-800">
+                        YouTube Video
+                      </option>
+                      <option value="others" className="bg-gray-800">
+                        others
+                      </option>
                     </select>
                   </div>
                   <div>
@@ -421,7 +429,7 @@ const ImportantLinks = () => {
                       className="block text-sm font-medium text-gray-200 flex items-center"
                     >
                       <FaLink className="mr-2" />
-                      Google Drive URL
+                      URL
                     </label>
                     <input
                       type="url"
@@ -430,12 +438,12 @@ const ImportantLinks = () => {
                       onChange={e => setFileUrl(e.target.value)}
                       disabled={file}
                       className="mt-1 w-full p-2 sm:p-3 bg-gray-800/60 text-white border border-blue-500/30 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-400 disabled:opacity-50"
-                      placeholder="https://drive.google.com/file/d/..."
-                      aria-label="Google Drive URL"
+                      placeholder="https://..."
+                      aria-label="URL"
                     />
                     <p className="mt-1 text-xs sm:text-sm text-gray-400">
-                      Ensure the Google Drive link is publicly accessible or
-                      shared with view permissions.
+                      Ensure the link is publicly accessible or shared with view
+                      permissions.
                     </p>
                   </div>
                   <motion.button
