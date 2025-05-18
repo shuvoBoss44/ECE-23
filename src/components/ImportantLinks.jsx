@@ -24,6 +24,22 @@ const ImportantLinks = () => {
   // Predefined semesters
   const semesters = ["1st Year Odd", "1st Year Even"];
 
+  // Format fileType for display (e.g., "youtube_playlist" -> "YouTube Playlist")
+  const formatFileType = fileType => {
+    if (!fileType) return "N/A";
+    const typeMap = {
+      pdf: "PDF",
+      ppt: "PowerPoint (PPT)",
+      pptx: "PowerPoint (PPTX)",
+      doc: "Word (DOC)",
+      docx: "Word (DOCX)",
+      youtube_playlist: "YouTube Playlist",
+      youtube_video: "YouTube Video",
+      others: "Others",
+    };
+    return typeMap[fileType.toLowerCase()] || fileType;
+  };
+
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -419,7 +435,7 @@ const ImportantLinks = () => {
                         YouTube Video
                       </option>
                       <option value="others" className="bg-gray-800">
-                        others
+                        Others
                       </option>
                     </select>
                   </div>
@@ -510,6 +526,9 @@ const ImportantLinks = () => {
                         {link.courseNo || "N/A"}
                       </p>
                       <p className="text-gray-400 text-xs sm:text-sm">
+                        Type: {formatFileType(link.fileType)}
+                      </p>
+                      <p className="text-gray-400 text-xs sm:text-sm">
                         Posted by:{" "}
                         <Link
                           to={`/profile/${link.userId?.roll || "unknown"}`}
@@ -530,19 +549,23 @@ const ImportantLinks = () => {
                       )}
                     </div>
                     <div className="flex gap-2">
-                      <motion.a
-                        href={link.fileUrl}
-                        download
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="p-2 bg-green-600 rounded-lg text-white text-xs sm:text-sm hover:bg-green-700 transition-all flex items-center"
-                        aria-label={`Download ${link.title}`}
-                      >
-                        <FaDownload className="mr-1" />
-                        Download
-                      </motion.a>
+                      {["pdf", "ppt", "pptx", "doc", "docx"].includes(
+                        link.fileType?.toLowerCase()
+                      ) && (
+                        <motion.a
+                          href={link.fileUrl}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="p-2 bg-green-600 rounded-lg text-white text-xs sm:text-sm hover:bg-green-700 transition-all flex items-center"
+                          aria-label={`Download ${link.title}`}
+                        >
+                          <FaDownload className="mr-1" />
+                          Download
+                        </motion.a>
+                      )}
                       {currentUser?._id === link.userId?._id && (
                         <motion.button
                           whileHover={{ scale: 1.03 }}
